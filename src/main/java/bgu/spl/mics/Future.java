@@ -11,6 +11,9 @@ import java.util.concurrent.TimeUnit;
  * No public constructor is allowed except for the empty constructor.
  */
 public class Future<T> {
+	//Fields
+	private T resolvedResult = null;
+	private boolean isResolved = false;
 	
 	/**
 	 * This should be the the only public constructor in this class.
@@ -27,24 +30,33 @@ public class Future<T> {
      * @return return the result of type T if it is available, if not wait until it is available.
      * 	       
      */
-	public T get() {
-		//TODO: implement this.
-		return null;
+	public synchronized T get() {
+		while (!isResolved) {
+			try {
+				wait(); // ממתין עד שיתבצע resolve
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt(); // טיפול ב-interruption
+			}
+		}
+		return resolvedResult;
 	}
 	
 	/**
      * Resolves the result of this Future object.
      */
-	public void resolve (T result) {
-		//TODO: implement this.
+	public synchronized void resolve(T result) {
+		if (!isResolved) {
+			this.resolvedResult = result;
+			this.isResolved = true;
+			notifyAll(); 
+		}
 	}
 	
 	/**
      * @return true if this object has been resolved, false otherwise
      */
-	public boolean isDone() {
-		//TODO: implement this.
-		return false;
+	public synchronized boolean isDone() {
+		return isResolved;
 	}
 	
 	/**
