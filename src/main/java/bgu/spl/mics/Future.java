@@ -19,7 +19,7 @@ public class Future<T> {
 	 * This should be the the only public constructor in this class.
 	 */
 	public Future() {
-		//TODO: implement this
+
 	}
 	
 	/**
@@ -70,9 +70,15 @@ public class Future<T> {
      * 	       wait for {@code timeout} TimeUnits {@code unit}. If time has
      *         elapsed, return null.
      */
-	public T get(long timeout, TimeUnit unit) {
-		//TODO: implement this.
-		return null;
-	}
+	public synchronized T get(long timeout, TimeUnit unit) {
+        if (!isResolved) {
+            try {
+                unit.timedWait(this, timeout); // מחכה זמן מוגבל
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // לטפל ב-interruption
+            }
+        }
+        return isResolved ? resolvedResult : null; // מחזיר null אם הזמן עבר
+    }
 
 }
