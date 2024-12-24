@@ -33,10 +33,10 @@ public class Future<T> {
 	public synchronized T get() {
 		while (!isResolved) {
 			try {
-				wait(); // ממתין עד שיתבצע resolve
+				wait(); // waits until another thread notify/interrupt it
 			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt(); // טיפול ב-interruption
-			}
+				Thread.currentThread().interrupt(); // Restore the interrupted status of the thread,
+			}										// as it gets cleared when InterruptedException is thrown. 										
 		}
 		return resolvedResult;
 	}
@@ -73,12 +73,12 @@ public class Future<T> {
 	public synchronized T get(long timeout, TimeUnit unit) {
         if (!isResolved) {
             try {
-                unit.timedWait(this, timeout); // מחכה זמן מוגבל
+                unit.timedWait(this, timeout); //waits the limited time
             } catch (InterruptedException e) {
-                Thread.currentThread().interrupt(); // לטפל ב-interruption
+                Thread.currentThread().interrupt(); //handles interruption like before
             }
         }
-        return isResolved ? resolvedResult : null; // מחזיר null אם הזמן עבר
+        return isResolved ? resolvedResult : null; // if the limited time has passed returns null
     }
 
 }

@@ -70,7 +70,7 @@ public class MessageBusImpl implements MessageBus {
 	public void register(MicroService m) {
     synchronized (lock) {
         if (!queues.containsKey(m)) {
-            queues.put(m, new LinkedList<>()); // תור חדש למיקרו-שירות
+            queues.put(m, new LinkedList<>()); // creates a new queue for the micro-service in the queues map
         }
     }
 }
@@ -78,8 +78,11 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public void unregister(MicroService m) {
 		synchronized (lock) {
-			queues.remove(m); // הסרת תור ההודעות של המיקרו-שירות
-			subscriptions.values().forEach(list -> list.remove(m)); // הסרת הרשמות
+			queues.remove(m); // removing the micro-service from the queues map 
+			
+			for (List<MicroService> subscriberList : subscriptions.values()) { // removing the micro-service from the subscription map
+				subscriberList.remove(m);
+			} 
 		}
 	}
 
