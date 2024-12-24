@@ -16,6 +16,7 @@ public class MessageBusImpl implements MessageBus {
 	//Fields
 	private final Map<Class<? extends Message>, List<MicroService>> subscriptions;
 	private final Map<MicroService, Queue<Message>> queues;
+	private final Map<Event<?>, Future<?>> futures;
 	private final Object lock = new Object();
 
 	@Override
@@ -36,25 +37,30 @@ public class MessageBusImpl implements MessageBus {
 				subscriptions.get(type).add(m);
 			}
 		}
-	}
 
 	@Override
 	public <T> void complete(Event<T> e, T result) {
-		// TODO Auto-generated method stub
-
+		synchronized (lock) {
+			Future<T> future = (Future<T>) futures.remove(e); // Remove the completed future from the futures map
+			if (future != null) {
+				future.resolve(result); // If the future is not null, resolve it with the given result
+			}
+		}
 	}
 
 	@Override
 	public void sendBroadcast(Broadcast b) {
 		synchronized (lock) {
 			List<MicroService> subscribers = subscriptions.get(b.getClass());
-			if (subscribers != null) {
+
+			if (subscribers != null && !subscribers.isEmpty()) {
 				for (MicroService m : subscribers) {
 					Queue<Message> queue = queues.get(m);
 					if (queue != null) {
 						queue.add(b); // מוסיפים את ה-Broadcast לתור של המיקרו-שירות
 					}
 				}
+				lock.notifyAll();
 			}
 		}
 	}
@@ -62,18 +68,36 @@ public class MessageBusImpl implements MessageBus {
 	
 	@Override
 	public <T> Future<T> sendEvent(Event<T> e) {
-		// TODO Auto-generated method stub
-		return null;
+		synchronized (lock) {
+			List<MicroService> subscribers = subscriptions.get(e.getClass());
+			if (subscribers != null && !subscribers.isEmpty()){
+				MicroService curMicroService = subscribers.remove(0); // Round Robin selection
+				subscribers.add(curMicroService); // Round Robin selection
+				Queue<Message> queue = queues.get(curMicroService); // Get selected MicroService's queue
+
+				if (queue != null){
+					Future<T> future = new Future<>(); // Create a new future for the event
+					futures.put(e, future);
+					queue.add(e);
+					lock.notifyAll();
+					return future;
+				}
+			}
+
+			return null; // If no micro-service has subscribed to the event's type
+		
+		}
 	}
+	
 
 	@Override
 	public void register(MicroService m) {
-    synchronized (lock) {
-        if (!queues.containsKey(m)) {
-            queues.put(m, new LinkedList<>()); // creates a new queue for the micro-service in the queues map
-        }
-    }
-}
+    	synchronized (lock) {
+        	if (!queues.containsKey(m)) {
+            	queues.put(m, new LinkedList<>()); // creates a new queue for the micro-service in the queues map
+        	}
+    	}
+	}
 
 	@Override
 	public void unregister(MicroService m) {
@@ -83,15 +107,31 @@ public class MessageBusImpl implements MessageBus {
 			for (List<MicroService> subscriberList : subscriptions.values()) { // removing the micro-service from the subscription map
 				subscriberList.remove(m);
 			} 
+
+			// צריך להוסיף למימוש ניקוי של פיוצ'רים שמחכים למיקרו סרביס הזה, אבל זה דורש עוד התעסקות
+			/*  Resolve any pending futures associated with the micro-service
+			futures.entrySet().removeIf(entry -> {
+				Event<?> event = entry.getKey();
+				Future<?> future = entry.getValue();
+				if (event.getMicroService() == m) {
+					future.resolve(null);
+					return true;
+				}
+				return false;
+			}); */
 		}
 	}
 
 	@Override
 	public Message awaitMessage(MicroService m) throws InterruptedException {
-		// TODO Auto-generated method stub
-		return null;
+		synchronized (lock) {
+			Queue<Message> queue = queues.get(m);
+			while (queue == null || queue.isEmpty()){
+				lock.wait(); // Wait until a message is available in the queue
+				queue = queues.get(m); // Get the updated queue
+			}
+
+			return queue.poll();
+		}
 	}
-
-	
-
 }
