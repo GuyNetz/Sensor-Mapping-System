@@ -124,5 +124,5 @@ class MessageBusImplTest {
         MicroService service = new DummyMicroService("ServiceJ");
 
         assertThrows(IllegalStateException.class, () -> bus.awaitMessage(service), "Should throw IllegalStateException for unregistered service.");
-    }
+    }
 }
