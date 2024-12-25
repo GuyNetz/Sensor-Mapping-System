@@ -1,6 +1,7 @@
 package bgu.spl.mics;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,26 @@ public class MessageBusImpl implements MessageBus {
 	private final Map<MicroService, Queue<Message>> queues;
 	private final Map<Event<?>, Future<?>> futures;
 	private final Object lock = new Object();
+	private static MessageBusImpl instance;
+
+	//Constructor
+	private MessageBusImpl() {
+		subscriptions = new HashMap<>();
+		queues = new HashMap<>();
+		futures = new HashMap<>();
+	}
+
+	//Methods
+	public static MessageBusImpl getInstance() {
+		if (instance == null) {
+			synchronized (MessageBusImpl.class) {
+				if (instance == null) {
+					instance = new MessageBusImpl();
+				}
+			}
+		}
+		return instance;
+	}
 
 	@Override
 	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
@@ -37,6 +58,7 @@ public class MessageBusImpl implements MessageBus {
 				subscriptions.get(type).add(m);
 			}
 		}
+	}
 
 	@Override
 	public <T> void complete(Event<T> e, T result) {
@@ -114,17 +136,8 @@ public class MessageBusImpl implements MessageBus {
 				subscriberList.remove(m);
 			} 
 
-			// צריך להוסיף למימוש ניקוי של פיוצ'רים שמחכים למיקרו סרביס הזה, אבל זה דורש עוד התעסקות
-			/*  Resolve any pending futures associated with the micro-service
-			futures.entrySet().removeIf(entry -> {
-				Event<?> event = entry.getKey();
-				Future<?> future = entry.getValue();
-				if (event.getMicroService() == m) {
-					future.resolve(null);
-					return true;
-				}
-				return false;
-			}); */
+			// Removing all futures that relates to the Micro-Service
+			futures.keySet().removeIf(event -> isEventRelatedToMicroService(event, m));
 		}
 	}
 
@@ -146,4 +159,9 @@ public class MessageBusImpl implements MessageBus {
 			return queue.poll();
 		}
 	}
+	// Helper method to check if an event is related to a Micro-Service
+	private boolean isEventRelatedToMicroService(Event<?> event, MicroService m) {
+		return queues.containsKey(m) && futures.get(event) != null;
+	}
+
 }
