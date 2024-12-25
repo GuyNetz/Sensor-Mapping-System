@@ -41,9 +41,13 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public <T> void complete(Event<T> e, T result) {
 		synchronized (lock) {
-			Future<T> future = (Future<T>) futures.remove(e); // Remove the completed future from the futures map
+			// Gets the future of the event
+			Future<T> future = (Future<T>) futures.get(e);
+
+			// Resolve the future and removes it from the futures map
 			if (future != null) {
-				future.resolve(result); // If the future is not null, resolve it with the given result
+				future.resolve(result);
+				futures.remove(e);
 			}
 		}
 	}
@@ -71,21 +75,23 @@ public class MessageBusImpl implements MessageBus {
 		synchronized (lock) {
 			List<MicroService> subscribers = subscriptions.get(e.getClass());
 			if (subscribers != null && !subscribers.isEmpty()){
-				MicroService curMicroService = subscribers.remove(0); // Round Robin selection
-				subscribers.add(curMicroService); // Round Robin selection
-				Queue<Message> queue = queues.get(curMicroService); // Get selected MicroService's queue
+
+				// Round Robin selection
+				MicroService curMicroService = subscribers.remove(0); 
+				subscribers.add(curMicroService); 
+
+				// Get selected MicroService's queue
+				Queue<Message> queue = queues.get(curMicroService); 
 
 				if (queue != null){
 					Future<T> future = new Future<>(); // Create a new future for the event
-					futures.put(e, future);
-					queue.add(e);
+					futures.put(e, future);	// Adds future to futures map
+					queue.add(e);	//Adds the event to the selected MicroService's queue
 					lock.notifyAll();
 					return future;
 				}
 			}
-
 			return null; // If no micro-service has subscribed to the event's type
-		
 		}
 	}
 	
@@ -125,12 +131,18 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public Message awaitMessage(MicroService m) throws InterruptedException {
 		synchronized (lock) {
+			// Checks if the Micro-Service is registered, throws an exception if not
 			Queue<Message> queue = queues.get(m);
-			while (queue == null || queue.isEmpty()){
-				lock.wait(); // Wait until a message is available in the queue
-				queue = queues.get(m); // Get the updated queue
+			if (queue == null) {
+				throw new IllegalStateException("MicroService is not registered");
 			}
 
+			// Waits until there's a message in the queue
+			while (queue.isEmpty()){
+				lock.wait(); 
+			}
+
+			//returns the first message in line
 			return queue.poll();
 		}
 	}
