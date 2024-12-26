@@ -10,6 +10,7 @@ import bgu.spl.mics.application.objects.Camera;
  * the system's StatisticalFolder upon sending its observations.
  */
 public class CameraService extends MicroService {
+    private Camera camera;
 
     /**
      * Constructor for CameraService.
@@ -17,8 +18,8 @@ public class CameraService extends MicroService {
      * @param camera The Camera object that this service will use to detect objects.
      */
     public CameraService(Camera camera) {
-        super("Change_This_Name");
-        // TODO Implement this
+        super("Camera Servie " + camera.getID());
+        this.camera = camera;
     }
 
     /**
