@@ -61,6 +61,7 @@ public class MessageBusImpl implements MessageBus {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <T> void complete(Event<T> e, T result) {
 		synchronized (lock) {
 			// Gets the future of the event

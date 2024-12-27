@@ -1,4 +1,8 @@
 package bgu.spl.mics.application.objects;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.LinkedList;
+
 
 /**
  * Manages the fusion of sensor data for simultaneous localization and mapping (SLAM).
@@ -8,6 +12,23 @@ package bgu.spl.mics.application.objects;
 public class FusionSlam {
     // Singleton instance holder
     private static class FusionSlamHolder {
-        // TODO: Implement singleton instance logic.
+        private static FusionSlam instance = new FusionSlam();
     }
+
+    // Fields
+    private List<LandMark> landMarks;
+    private List<Pose> poses;
+    
+
+    // Constructor
+    private FusionSlam() {
+        this.landMarks = new ArrayList<>();
+        this.poses = new LinkedList<>();
+    }
+
+    public static FusionSlam getInstance() {
+        return FusionSlamHolder.instance;
+    }
+
+
 }

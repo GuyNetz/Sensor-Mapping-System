@@ -11,14 +11,14 @@ import java.util.LinkedList;
 public class Camera {
     private int id;
     private int frequency;
-    private String status; // "Up", "Down", "Error"
+    private STATUS status; // "Up", "Down", "Error"
     private List<StampedDetectedObjects> detectedObjectsList;
 
     // Constructor
     public Camera (int id, int frequency) {
         this.id = id;
         this.frequency = frequency;
-        this.status = "Up";
+        this.status = STATUS.UP;
         this.detectedObjectsList = new LinkedList<>();
     }
 
@@ -31,7 +31,7 @@ public class Camera {
         return frequency;
     }
 
-    public String getStatus() {
+    public STATUS getStatus() {
         return status;
     }
 
@@ -39,7 +39,7 @@ public class Camera {
         return detectedObjectsList;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(STATUS status) {
         this.status = status;
     }
 
