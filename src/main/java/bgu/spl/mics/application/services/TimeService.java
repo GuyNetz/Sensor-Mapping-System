@@ -38,6 +38,7 @@ public class TimeService extends MicroService {
 
                     // Sleep for the duration of the tick
                     Thread.sleep(TickTime);
+
                 } catch (InterruptedException e) {
                     // Graceful shutdown if interrupted
                     Thread.currentThread().interrupt();
@@ -54,6 +55,5 @@ public class TimeService extends MicroService {
 
         // Start the timer thread
         timerThread.start();
-    }
+    }
 }
-
