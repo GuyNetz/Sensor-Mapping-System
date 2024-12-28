@@ -1,21 +1,16 @@
 package bgu.spl.mics;
 
 public class TickBroadcast implements Broadcast{
-    private final int tick;
-    private final boolean isFinalTick;
+    // Fields
+    private final int currentTick;
 
     // Constructor
-    public TickBroadcast(int tick, boolean isFinalTick){
-        this.tick = tick;
-        this.isFinalTick = isFinalTick;
+    public TickBroadcast(int currentTick) {
+        this.currentTick = currentTick;
     }
 
     // Methods
-    public int getTick(){
-        return tick;
-    }
-
-    public boolean isFinalTick(){
-        return isFinalTick;
+    public int getCurrentTick() {
+        return currentTick;
     }
 }

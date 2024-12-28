@@ -14,4 +14,13 @@ public class DetectedObject {
         this.id = id;
         this.description = description;
     }
+
+    // Getters
+    public String getId() {
+        return id;
+    }
+
+    public String getDescription() {
+        return description;
+    }
 }

@@ -1,14 +1,13 @@
 package bgu.spl.mics;
 
-public class CrashedBroadcast {
+public class TerminatedBroadcast {
 
-        /**
-     * Constructor for CrashedBroadcast.
+    /**
+     * Constructor for TerminatedBroadcast.
      * This class does not require any fields since it serves only as a signal.
      */
-    public CrashedBroadcast() {
+    public TerminatedBroadcast() {
         // No fields required; this is a simple signal message.
     }
 }
-    
 
