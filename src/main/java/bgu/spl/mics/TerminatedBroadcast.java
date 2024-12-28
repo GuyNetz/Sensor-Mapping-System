@@ -1,6 +1,6 @@
 package bgu.spl.mics;
 
-public class TerminatedBroadcast {
+public class TerminatedBroadcast implements Broadcast {
 
     /**
      * Constructor for TerminatedBroadcast.
