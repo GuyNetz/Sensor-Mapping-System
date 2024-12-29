@@ -16,4 +16,13 @@ public class StampedDetectedObjects {
         this.time = time;
         this.detectedObjects = detectedObjects;
     }
+
+    //Getters
+    public int getTime() {
+        return time;
+    }   
+
+    public List<DetectedObject> getDetectedObjects() {
+        return detectedObjects;
+    }
 }

@@ -1,4 +1,4 @@
-package bgu.spl.mics;
+package bgu.spl.mics.application.messages;
 
 import bgu.spl.mics.application.objects.Pose;
 

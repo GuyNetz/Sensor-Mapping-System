@@ -2,6 +2,10 @@ package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.objects.Camera;
+import bgu.spl.mics.application.messages.DetectObjectsEvent;
+import bgu.spl.mics.application.messages.TickBroadcast;
+import bgu.spl.mics.application.objects.STATUS;
+
 /**
  * CameraService is responsible for processing data from the camera and
  * sending DetectObjectsEvents to LiDAR workers.
@@ -11,6 +15,7 @@ import bgu.spl.mics.application.objects.Camera;
  */
 public class CameraService extends MicroService {
     private Camera camera;
+    private int cameraFrequency;
 
     /**
      * Constructor for CameraService.
@@ -18,8 +23,9 @@ public class CameraService extends MicroService {
      * @param camera The Camera object that this service will use to detect objects.
      */
     public CameraService(Camera camera) {
-        super("Camera Service " + camera.getID());
+        super("CameraService" + camera.getID());
         this.camera = camera;
+        this.cameraFrequency = camera.getFrequency();
     }
 
     /**
@@ -29,6 +35,21 @@ public class CameraService extends MicroService {
      */
     @Override
     protected void initialize() {
-        // TODO Implement this
+        // Subscribe to TickBroadcasts
+        subscribeBroadcast(TickBroadcast.class, tickBroadcast -> {
+
+            // Check if the camera is operational
+            if (camera.getStatus() == STATUS.UP) {
+
+                // Check if the current tick is a multiple of the camera's frequency
+                if (tickBroadcast.getCurrentTick() % cameraFrequency == 0) {
+
+                    // Send a DetectObjectsEvent to the MessageBus
+
+                    sendEvent(new DetectObjectsEvent(camera.getDetectedObjectsList()));
+                }
+            }
+        });
+        
     }
 }

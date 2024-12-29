@@ -1,4 +1,4 @@
-package bgu.spl.mics;
+package bgu.spl.mics.application.messages;
 
 public class CrashedBroadcast {
 
