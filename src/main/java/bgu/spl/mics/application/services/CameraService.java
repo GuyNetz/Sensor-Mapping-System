@@ -45,7 +45,6 @@ public class CameraService extends MicroService {
                 if (tickBroadcast.getCurrentTick() % cameraFrequency == 0) {
 
                     // Send a DetectObjectsEvent to the MessageBus
-
                     sendEvent(new DetectObjectsEvent(camera.getDetectedObjectsList()));
                 }
             }
