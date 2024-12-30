@@ -15,4 +15,10 @@ public class TrackedObjectsEvent implements Event<List<TrackedObjectsEvent>>{
     public TrackedObjectsEvent(List<TrackedObject> trackedObjects) {
         this.trackedObjects = trackedObjects;
     }
+
+    // Methods
+    public List<TrackedObject> getTrackedObjects() {
+        return trackedObjects;
+    }
+    
 }
