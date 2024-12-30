@@ -2,9 +2,14 @@ package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.objects.Camera;
+import bgu.spl.mics.application.messages.CrashedBroadcast;
 import bgu.spl.mics.application.messages.DetectObjectsEvent;
+import bgu.spl.mics.application.messages.TerminatedBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.objects.STATUS;
+import bgu.spl.mics.application.objects.StatisticalFolder;
+
+
 
 /**
  * CameraService is responsible for processing data from the camera and
@@ -45,11 +50,21 @@ public class CameraService extends MicroService {
                 if (tickBroadcast.getCurrentTick() % cameraFrequency == 0) {
 
                     // Send a DetectObjectsEvent to the MessageBus
-
                     sendEvent(new DetectObjectsEvent(tickBroadcast.getCurrentTick() ,camera.getDetectedObjectsList()));
+                    statisticalFolder.logDetectedObjects(camera.getID(), tickBroadcast.getCurrentTick(), camera.getDetectedObjectsList());
+                    }
                 }
-            }
         });
-        
+
+        // Subscribe to TerminatedBroadcast
+        subscribeBroadcast(TerminatedBroadcast.class, terminatedBroadcast -> {
+            terminate();
+        });
+    
+        // Subscribe to CrashedBroadcast
+        subscribeBroadcast(CrashedBroadcast.class, crashedBroadcast -> {
+            camera.setStatus(STATUS.DOWN);
+        });
+    
     }
 }

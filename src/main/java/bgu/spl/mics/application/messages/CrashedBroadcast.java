@@ -1,6 +1,8 @@
 package bgu.spl.mics.application.messages;
 
-public class CrashedBroadcast {
+import bgu.spl.mics.Broadcast;
+
+public class CrashedBroadcast implements Broadcast{
 
         /**
      * Constructor for CrashedBroadcast.

@@ -1,10 +1,12 @@
 package bgu.spl.mics.application.messages;
 
 import java.util.List;
+
+import bgu.spl.mics.application.objects.DetectedObject;
 import bgu.spl.mics.application.objects.StampedDetectedObjects;
 import bgu.spl.mics.Event; 
 
-public class DetectObjectsEvent implements Event<List<String>>{
+public class DetectObjectsEvent implements Event<List<DetectedObject>>{
     
     // The time at which the objects were detected.
     private final int detectionTime;

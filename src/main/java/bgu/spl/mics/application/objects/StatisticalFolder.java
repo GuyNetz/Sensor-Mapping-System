@@ -1,5 +1,7 @@
 package bgu.spl.mics.application.objects;
 
+import java.util.List;
+
 /**
  * Holds statistical information about the system's operation.
  * This class aggregates metrics such as the runtime of the system,
@@ -20,4 +22,9 @@ public class StatisticalFolder {
         this.numLandmarks = 0;
     }
 
+    // Methods
+    public synchronized void logDetectedObjects(int cameraID, int tick, List<StampedDetectedObjects> objects) { // Logs detected objects and updates the count.
+        System.out.println("Camera " + cameraID + " detected " + objects.size() + " objects at tick " + tick);
+        numDetectedObjects += objects.size();
+    }
 }
