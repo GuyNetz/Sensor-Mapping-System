@@ -35,4 +35,10 @@ public class StatisticalFolder {
         System.out.println("Camera " + cameraID + " detected " + objects.size() + " objects at tick " + tick);
         numDetectedObjects += objects.size();
     }
+
+    public synchronized void logTrackedObjects(int LiDarID, int tick, List<TrackedObject> objects) { // Logs tracked objects and updates the count.
+        System.out.println("LiDar " + LiDarID + " tracked " + objects.size() + " objects at tick " + tick);
+        numTrackedObjects += objects.size();
+    }
+
 }
