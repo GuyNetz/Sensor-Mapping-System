@@ -22,6 +22,14 @@ public class StatisticalFolder {
         this.numLandmarks = 0;
     }
 
+    // Static holder for the singleton instance
+    private static final StatisticalFolder instance = new StatisticalFolder();
+
+    // Public method to get the singleton instance
+    public static StatisticalFolder getInstance() {
+        return instance;
+    }
+
     // Methods
     public synchronized void logDetectedObjects(int cameraID, int tick, List<StampedDetectedObjects> objects) { // Logs detected objects and updates the count.
         System.out.println("Camera " + cameraID + " detected " + objects.size() + " objects at tick " + tick);

@@ -51,7 +51,9 @@ public class CameraService extends MicroService {
 
                     // Send a DetectObjectsEvent to the MessageBus
                     sendEvent(new DetectObjectsEvent(tickBroadcast.getCurrentTick() ,camera.getDetectedObjectsList()));
-                    statisticalFolder.logDetectedObjects(camera.getID(), tickBroadcast.getCurrentTick(), camera.getDetectedObjectsList());
+
+                    // Log the detected objects in the StatisticalFolder
+                    StatisticalFolder.getInstance().logDetectedObjects(camera.getID(), tickBroadcast.getCurrentTick(), camera.getDetectedObjectsList());
                     }
                 }
         });
