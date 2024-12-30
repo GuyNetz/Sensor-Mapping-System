@@ -18,4 +18,19 @@ public class GPSIMU {
         this.status = STATUS.UP;
         this.poseList = new LinkedList<>();
     }
+
+    //Methods
+    public synchronized void updateTick(float x, float y, float yaw, int tick) {
+        this.currentTick = tick;
+        Pose newPose = new Pose(x, y, yaw, tick);
+        poseList.add(newPose);
+    }
+
+    public synchronized STATUS getStatus() {
+        return status;
+    }
+
+    public synchronized void setStatus(STATUS status) {
+        this.status = status;
+    }
 }

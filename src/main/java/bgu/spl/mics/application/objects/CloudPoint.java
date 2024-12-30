@@ -14,4 +14,13 @@ public class CloudPoint {
         this.x = x;
         this.y = y;
     }
+
+    // Methods
+    public double getX() {
+        return x;
+    }
+
+    public double getY() {
+        return y;
+    }
 }

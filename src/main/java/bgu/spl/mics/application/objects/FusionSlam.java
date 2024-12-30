@@ -31,14 +31,29 @@ public class FusionSlam {
         return FusionSlamHolder.instance;
     }
 
-    public synchronized void updateWithTrackedObjects(List<LandMark> trackedObjects) { // Update the global map with new landmarks
+    public synchronized void updateMap(List<LandMark> trackedObjects) { // Update the global map with new landmarks
         if (trackedObjects != null) {
-            landMarks.addAll(trackedObjects);
-            System.out.println("FusionSlam updated with " + trackedObjects.size() + " tracked objects."); // Debug
+            for (LandMark newLandmark : trackedObjects) {
+
+                // Check if a landmark with the same ID already exists
+                LandMark existingLandmark = landMarks.stream()
+                                                   .filter(lm -> lm.getID().equals(newLandmark.getID()))
+                                                   .findFirst()
+                                                   .orElse(null);
+    
+                if (existingLandmark != null) {
+                    // Update existing landmark coordinates by averaging
+                    existingLandmark.updateCoordinates(newLandmark.getCoordinates()); 
+                } else {
+                    // Add the new landmark to the list
+                    landMarks.add(newLandmark);
+                }
+            }        
+            System.out.println("FusionSlam updated with " + trackedObjects.size() + " tracked objects."); 
         }
     }
 
-    public synchronized void updateWithPose(Pose pose) { // Update the global map with a new pose
+    public synchronized void updatePose(Pose pose) { // Update the global map with a new pose
         if (pose != null) {
             poses.add(pose);
             System.out.println("FusionSlam updated with new pose."); // Debug
@@ -51,5 +66,12 @@ public class FusionSlam {
 
     public synchronized List<Pose> getPoses() {
         return new ArrayList<>(poses); // Return a copy to maintain encapsulation
+    }
+
+    public synchronized Pose getCurrentPose(){
+        if (!poses.isEmpty())
+            return poses.get(poses.size()-1);
+
+        return new Pose(0, 0, 0, 0);
     }
 }
