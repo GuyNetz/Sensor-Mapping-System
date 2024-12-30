@@ -1,35 +1,29 @@
 package bgu.spl.mics.application.messages;
 
 import java.util.List;
-
-import bgu.spl.mics.application.objects.DetectedObject;
 import bgu.spl.mics.application.objects.StampedDetectedObjects;
+import bgu.spl.mics.Event; 
 
-public class DetectObjectsEvent {
+public class DetectObjectsEvent implements Event<List<String>>{
     
     // The time at which the objects were detected.
     private final int detectionTime;
 
     // A list of detected objects, each containing an ID and a description.
-    private final List<DetectedObject> detectedObjects;
+    private final List<StampedDetectedObjects> stampedDetectedObjects;
 
    // Constructor
-   public DetectObjectsEvent(int detectionTime, List<DetectedObject> detectedObjects) {
+   public DetectObjectsEvent(int detectionTime, List<StampedDetectedObjects> stampedDetectedObjects) {
         this.detectionTime = detectionTime;
-        this.detectedObjects = detectedObjects;
+        this.stampedDetectedObjects = stampedDetectedObjects;
     } 
-
-    public DetectObjectsEvent(StampedDetectedObjects stampedDetectedObjects){
-        this.detectionTime = stampedDetectedObjects.getTime();
-        this.detectedObjects = stampedDetectedObjects.getDetectedObjects();
-}
 
     // Getters
     public int getDetectionTime() {
         return detectionTime;
     }
 
-    public List<DetectedObject> getDetectedObjects() {
-        return detectedObjects;
+    public List<StampedDetectedObjects> getStampedDetectedObjects() {
+        return stampedDetectedObjects;
     }
 }
