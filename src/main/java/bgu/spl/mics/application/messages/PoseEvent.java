@@ -1,8 +1,9 @@
 package bgu.spl.mics.application.messages;
 
 import bgu.spl.mics.application.objects.Pose;
+import bgu.spl.mics.Event;
 
-public class PoseEvent {
+public class PoseEvent implements Event<Pose> {
     //Fields
     private final Pose pose;
     private final int time;
