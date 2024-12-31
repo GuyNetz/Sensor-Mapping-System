@@ -33,4 +33,26 @@ public class GPSIMU {
     public synchronized void setStatus(STATUS status) {
         this.status = status;
     }
+
+    //getter for currentTick
+    public synchronized int getCurrentTick() {
+        return currentTick;
+    }
+    
+    
+
+    public Pose getPose(int tick) {
+        // Iterate through the poseList 
+        for (Pose pose : poseList) {
+            // Check if the pose's time matches the target tick
+            if (pose.getTime() == tick) {
+                // If a match is found, return the pose
+                return pose; 
+            }
+        }
+
+        // If no matching pose is found, handle the error
+        System.err.println("Error: Pose not found for tick " + tick);
+        return null; // Or throw an exception 
+    }
 }
