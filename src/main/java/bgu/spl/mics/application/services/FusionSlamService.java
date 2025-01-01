@@ -62,4 +62,8 @@ public class FusionSlamService extends MicroService {
         });
 
     }
+
+    public void stopService() {
+        terminate(); // This calls the protected method from MicroService
+    }
 }

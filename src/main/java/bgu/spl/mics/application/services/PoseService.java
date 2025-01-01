@@ -46,4 +46,8 @@ public class PoseService extends MicroService {
         subscribeBroadcast(TerminatedBroadcast.class, (terminatedBroadcast) -> terminate());
         subscribeBroadcast(CrashedBroadcast.class, (crashedBroadcast) -> terminate());
     }
+    
+    public void stopService() {
+        terminate(); // This calls the protected method from MicroService
+    }
 }

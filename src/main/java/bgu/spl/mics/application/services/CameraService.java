@@ -69,4 +69,8 @@ public class CameraService extends MicroService {
         });
     
     }
+
+    public void stopService() {
+        terminate(); // This calls the protected method from MicroService
+    }
 }
