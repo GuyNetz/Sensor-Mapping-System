@@ -45,10 +45,11 @@ public class GurionRockRunner {
         String configFilePath = args[0];
 
         try {
+            System.out.println("Debug Hello World");
             // Parse the configuration file using GSON
             JsonObject config = parseJsonConfig(configFilePath);
 
-
+            System.out.println("Debug2 Hello World");
             // Extract simulation timing
             int tickDuration = config.get("TickTime").getAsInt();
             int duration = config.get("Duration").getAsInt();

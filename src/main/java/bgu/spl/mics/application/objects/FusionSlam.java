@@ -47,6 +47,8 @@ public class FusionSlam {
                 } else {
                     // Add the new landmark to the list
                     landMarks.add(newLandmark);
+                    StatisticalFolder stats = StatisticalFolder.getInstance();
+                    stats.incrementNumLandmarks();
                 }
             }        
             System.out.println("FusionSlam updated with " + trackedObjects.size() + " tracked objects."); 

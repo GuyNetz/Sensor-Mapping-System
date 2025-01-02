@@ -3,6 +3,7 @@ package bgu.spl.mics.application.services;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.TerminatedBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
+import bgu.spl.mics.application.objects.StatisticalFolder;
 
 /**
  * TimeService acts as the global timer for the system, broadcasting TickBroadcast messages
@@ -33,6 +34,10 @@ public class TimeService extends MicroService {
         Thread timerThread = new Thread(() -> {
             for (int currentTick = 1; currentTick <= Duration; currentTick++) {
                 try {
+                    // Update the systemRuntime in the StatisticalFolder
+                    StatisticalFolder stats = StatisticalFolder.getInstance();
+                    stats.incrementSystemRuntime();
+
                     // Broadcast the current tick
                     sendBroadcast(new TickBroadcast(currentTick));
 
