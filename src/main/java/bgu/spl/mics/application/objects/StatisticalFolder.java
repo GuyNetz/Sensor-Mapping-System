@@ -26,7 +26,7 @@ public class StatisticalFolder {
     public int getSystemRuntime() {
         return systemRuntime;
     }
-    
+
     public int getNumDetectedObjects() {
         return numDetectedObjects;
     }
@@ -47,10 +47,10 @@ public class StatisticalFolder {
         return instance;
     }
 
-    // Methods
+    // Other methods
     public synchronized void logDetectedObjects(int cameraID, int tick, List<StampedDetectedObjects> objects) { // Logs detected objects and updates the count.
         System.out.println("Camera " + cameraID + " detected " + objects.size() + " objects at tick " + tick);
-        this.numDetectedObjects += objects.size();
+        numDetectedObjects += objects.size();
     }
 
     public synchronized void logTrackedObjects(int LiDarID, int tick, List<TrackedObject> objects) { // Logs tracked objects and updates the count.
@@ -58,4 +58,11 @@ public class StatisticalFolder {
         numTrackedObjects += objects.size();
     }
 
+    public void incrementNumLandmarks() {
+        this.numLandmarks++;
+    }
+
+    public void incrementSystemRuntime() {
+        this.systemRuntime++;
+    }
 }
