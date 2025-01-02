@@ -3,15 +3,20 @@ package bgu.spl.mics.application;
 import bgu.spl.mics.application.services.*;
 import bgu.spl.mics.application.objects.*;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import java.util.List;
-
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+
+
+
+
 
 /**
  * The main entry point for the GurionRock Pro Max Ultra Over 9000 simulation.
@@ -137,6 +142,17 @@ public class GurionRockRunner {
             // Start the simulation
             startSimulation(timeService, cameraServices, lidarServices, poseService, fusionSlamService);
 
+            //build the output file
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            StatisticalFolder stats = StatisticalFolder.getInstance();
+            List<LandMark> landMarks = fusionSlam.getLandMarks();
+
+            OutputData outputData = new OutputData(stats, landMarks);
+
+            try (FileWriter writer = new FileWriter("output.json")) {
+                gson.toJson(outputData, writer); 
+            }
+            System.out.println("Output file created successfully.");
             System.out.println("Simulation completed successfully.");
 
         } catch (IOException e) {
@@ -208,3 +224,21 @@ public class GurionRockRunner {
         fusionSlamService.stopService();
     }
 }
+
+@SuppressWarnings("unused")
+class OutputData {
+    private final int systemRuntime;
+    private final int numDetectedObjects;
+    private final int numTrackedObjects;
+    private final int numLandmarks;
+    private final List<LandMark> landMarks;
+
+    public OutputData(StatisticalFolder stats, List<LandMark> landMarks) {
+        this.systemRuntime = stats.getSystemRuntime();
+        this.numDetectedObjects = stats.getNumDetectedObjects();
+        this.numTrackedObjects = stats.getNumTrackedObjects();
+        this.numLandmarks = stats.getNumLandmarks();
+        this.landMarks = landMarks;
+    }
+}
+

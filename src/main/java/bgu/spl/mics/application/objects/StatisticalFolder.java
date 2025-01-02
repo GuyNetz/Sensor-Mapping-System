@@ -22,6 +22,23 @@ public class StatisticalFolder {
         this.numLandmarks = 0;
     }
 
+    // Getters
+    public int getSystemRuntime() {
+        return systemRuntime;
+    }
+    
+    public int getNumDetectedObjects() {
+        return numDetectedObjects;
+    }
+
+    public int getNumTrackedObjects() {
+        return numTrackedObjects;
+    }
+
+    public int getNumLandmarks() {
+        return numLandmarks;
+    }
+
     // Static holder for the singleton instance
     private static final StatisticalFolder instance = new StatisticalFolder();
 
@@ -33,7 +50,7 @@ public class StatisticalFolder {
     // Methods
     public synchronized void logDetectedObjects(int cameraID, int tick, List<StampedDetectedObjects> objects) { // Logs detected objects and updates the count.
         System.out.println("Camera " + cameraID + " detected " + objects.size() + " objects at tick " + tick);
-        numDetectedObjects += objects.size();
+        this.numDetectedObjects += objects.size();
     }
 
     public synchronized void logTrackedObjects(int LiDarID, int tick, List<TrackedObject> objects) { // Logs tracked objects and updates the count.
