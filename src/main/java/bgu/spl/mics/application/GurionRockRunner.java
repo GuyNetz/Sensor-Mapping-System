@@ -45,11 +45,11 @@ public class GurionRockRunner {
         String configFilePath = args[0];
 
         try {
-            System.out.println("Debug Hello World");
+            System.out.println("Debug 1");
             // Parse the configuration file using GSON
             JsonObject config = parseJsonConfig(configFilePath);
 
-            System.out.println("Debug2 Hello World");
+            System.out.println("Debug 2");
             // Extract simulation timing
             int tickDuration = config.get("TickTime").getAsInt();
             int duration = config.get("Duration").getAsInt();
@@ -104,10 +104,14 @@ public class GurionRockRunner {
             }
 
 
+            System.out.println("Debug 3");
+
             // Initialize PoseService
             PoseService poseService = null;
             // Create the GPSIMU object
             String poseDataPath = config.get("poseJsonFile").getAsString();
+
+            System.out.println("Debug 4");
 
             try(FileReader poseReader = new FileReader(poseDataPath)){
                 Gson gson = new Gson();
@@ -119,6 +123,8 @@ public class GurionRockRunner {
                     gpsimu.updateTick(pose.getX(), pose.getY(), pose.getYaw(), pose.getTime());
                 }
             
+            System.out.println("Debug 5");
+
             // Create and start the PoseService
                 poseService = new PoseService(gpsimu);
                 Thread poseServiceThread = new Thread(poseService);
@@ -127,6 +133,7 @@ public class GurionRockRunner {
                 e.printStackTrace();
             }
 
+            System.out.println("Debug 6");
 
             // Initialize FusionSlamService
                 // Create the Fusion Slam object
@@ -139,6 +146,7 @@ public class GurionRockRunner {
                 Thread fusionSlamThread = new Thread(fusionSlamService);
                 fusionSlamThread.start();
 
+                System.out.println("Debug 7");
                 
             // Start the simulation
             startSimulation(timeService, cameraServices, lidarServices, poseService, fusionSlamService);

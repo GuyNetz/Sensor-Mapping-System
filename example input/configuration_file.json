@@ -3,7 +3,7 @@
     "CamerasConfigurations": [
       {
         "id": 1,
-        "frequency": 0,
+        "frequency": 1,
         "camera_key": "camera1"
       }
     ],
@@ -13,12 +13,12 @@
     "LidarConfigurations": [
       {
         "id": 1,
-        "frequency": 0
+        "frequency": 1
       }
     ],
     "lidars_data_path": "./lidar_data.json"
   },
-  "poseJsonFile": "./pose_data.json",
+  "poseJsonFile": "example input/pose_data.json",
   "TickTime": 1,
   "Duration": 30
 }
