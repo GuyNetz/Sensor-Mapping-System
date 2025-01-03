@@ -165,4 +165,16 @@ public class MessageBusImpl implements MessageBus {
 		return queues.containsKey(m) && futures.get(event) != null;
 	}
 
+	//Getters
+	public Map<Class<? extends Message>, List<MicroService>> getSubscriptions() {
+		return subscriptions;
+	}
+
+	public Map<MicroService, Queue<Message>> getQueues() {
+		return queues;
+	}
+
+	public Map<Event<?>, Future<?>> getFutures() {
+		return futures;
+	}
 }

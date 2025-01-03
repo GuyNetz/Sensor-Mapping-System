@@ -1,57 +1,146 @@
-// package bgu.spl.mics;
+package bgu.spl.mics;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
-// import org.junit.jupiter.api.Test;
+import bgu.spl.mics.application.objects.Camera;
+import bgu.spl.mics.application.objects.GPSIMU;
+import bgu.spl.mics.application.services.CameraService;
+import bgu.spl.mics.application.services.PoseService;
+import bgu.spl.mics.application.objects.Pose;
+import bgu.spl.mics.application.messages.PoseEvent;
+import bgu.spl.mics.application.messages.TickBroadcast;
+import bgu.spl.mics.application.services.TimeService;
 
-// import java.util.concurrent.TimeUnit;
 
-// import static org.junit.jupiter.api.Assertions.*;
 
-// class MessageBusImplTest {
+class MessageBusImplTest {
 
-//     @Test
-//     void testRegister() {
-//         MessageBusImpl bus = MessageBusImpl.getInstance();
-//         MicroService service = new DummyMicroService("ServiceA");
+    /************** testing register **************/
+    @Test
+    void testRegister() {
+        //objects
+        MessageBusImpl bus = MessageBusImpl.getInstance();
+        Camera camera = new Camera(1, 3);
+        MicroService cameraService = new CameraService(camera);
 
-//         bus.register(service);
-//         assertTrue(bus.queues.containsKey(service), "Service should be registered.");
-//     }
+        //register
+        bus.register(cameraService);
 
-//     @Test
-//     void testUnregister() {
-//         MessageBusImpl bus = MessageBusImpl.getInstance();
-//         MicroService service = new DummyMicroService("ServiceB");
+        //check if the service is in the queue
+        assertTrue(bus.getQueues().containsKey(cameraService));
+    }
 
-//         bus.register(service);
-//         bus.unregister(service);
-//         assertFalse(bus.queues.containsKey(service), "Service should be unregistered.");
-//     }
+    /************** testing unregister **************/
+    @Test
+    void testUnregister() {
+        //objects
+        MessageBusImpl bus = MessageBusImpl.getInstance();
+        Camera camera = new Camera(1, 3);
+        MicroService cameraService = new CameraService(camera);
 
-//     @Test
-//     void testSubscribeEvent() {
-//         MessageBusImpl bus = MessageBusImpl.getInstance();
-//         MicroService service = new DummyMicroService("ServiceC");
-//         Event<String> event = new Event<>() {};
+        //register and unregister
+        bus.register(cameraService);
+        bus.unregister(cameraService);
 
-//         bus.register(service);
-//         bus.subscribeEvent(event.getClass(), service);
+        //check if the service is in the queue
+        assertFalse(bus.getQueues().containsKey(cameraService));
+    }
 
-//         assertTrue(bus.subscriptions.containsKey(event.getClass()), "Event type should exist in subscriptions.");
-//         assertTrue(bus.subscriptions.get(event.getClass()).contains(service), "Service should be subscribed to the event.");
-//     }
+    /************** testing subscribeEvent **************/
+    @Test
+    void testSubscribeEvent() {
+        //objects
+        MessageBusImpl bus = MessageBusImpl.getInstance();
+        GPSIMU gpsimu = new GPSIMU();
+        MicroService service = new PoseService(gpsimu);
+        Pose pose = new Pose(1.2f, 2.5f, 3.5f, 4);
+        PoseEvent event = new PoseEvent(pose);
 
-//     @Test
-//     void testSubscribeBroadcast() {
-//         MessageBusImpl bus = MessageBusImpl.getInstance();
-//         MicroService service = new DummyMicroService("ServiceD");
-//         Broadcast broadcast = new Broadcast() {};
+        //register and subscribe
+        bus.register(service);
+        bus.subscribeEvent(event.getClass(), service);
 
-//         bus.register(service);
-//         bus.subscribeBroadcast(broadcast.getClass(), service);
+        //check if the service is in the queue
+        assertTrue(bus.getSubscriptions().containsKey(event.getClass()));
+        assertTrue(bus.getSubscriptions().get(event.getClass()).contains(service));
+    }
+    /************** testing subscribeBroadcast **************/
+    @Test
+    void testSubscribeBroadcast() {
+        //objects
+        MessageBusImpl bus = MessageBusImpl.getInstance();
+        MicroService timeService = new TimeService(1, 30);
+        TickBroadcast tickBroadcast = new TickBroadcast(3);
 
-//         assertTrue(bus.subscriptions.containsKey(broadcast.getClass()), "Broadcast type should exist in subscriptions.");
-//         assertTrue(bus.subscriptions.get(broadcast.getClass()).contains(service), "Service should be subscribed to the broadcast.");
-//     }
+        //register and subscribe
+        bus.register(timeService);
+        bus.subscribeBroadcast(tickBroadcast.getClass(), timeService);
+
+        //check if the service is in the queue
+        assertTrue(bus.getSubscriptions().containsKey(tickBroadcast.getClass()));
+        assertTrue(bus.getSubscriptions().get(tickBroadcast.getClass()).contains(timeService)); 
+    }
+
+    /************** testing awaitMessage **************/
+    //Ensures awaitMessage throws IllegalStateException for unregistered MicroService.
+    @Test
+    void testAwaitMessageUnregisteredMicroService() {
+        MessageBusImpl bus = MessageBusImpl.getInstance();
+        MicroService unregisteredService = new TimeService(1, 30);
+
+        // Expect an exception
+        assertThrows(IllegalStateException.class, () -> bus.awaitMessage(unregisteredService));
+    }  
+
+    //Verifies awaitMessage returns the correct message when the queue has messages.
+    @Test
+    void testAwaitMessageWithMessageInQueue() throws InterruptedException {
+        MessageBusImpl bus = MessageBusImpl.getInstance();
+        MicroService timeService = new TimeService(1, 30);
+        Broadcast tickBroadcast = new TickBroadcast(1);
+
+        // Register the service and add a message to its queue
+        bus.register(timeService);
+        bus.subscribeBroadcast(TickBroadcast.class, timeService);
+        bus.sendBroadcast(tickBroadcast);
+
+        // Await message and verify it is the expected one
+        Message receivedMessage = bus.awaitMessage(timeService);
+        assertEquals(tickBroadcast, receivedMessage);
+    }
+
+    //Checks that awaitMessage blocks until a message is added to the queue.
+    @Test
+    void testAwaitMessageBlocking() throws InterruptedException {
+        MessageBusImpl bus = MessageBusImpl.getInstance();
+        MicroService timeService = new TimeService(1, 30);
+        Broadcast tickBroadcast = new TickBroadcast(1);
+
+        // Register the service
+        bus.register(timeService);
+        bus.subscribeBroadcast(TickBroadcast.class, timeService);
+
+        // Create a thread to send a message after a delay
+        Thread senderThread = new Thread(() -> {
+            try {
+                Thread.sleep(500); // Simulate delay
+                bus.sendBroadcast(tickBroadcast);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        });
+        senderThread.start();
+
+        // Await message and verify it is the expected one
+        Message receivedMessage = bus.awaitMessage(timeService);
+        assertEquals(tickBroadcast, receivedMessage);
+
+        // Ensure senderThread completes
+        senderThread.join();
+    }
+
+
+
 
 //     @Test
 //     void testSendEvent() {
@@ -103,26 +192,5 @@
 //         assertEquals("Result", future.get(), "Future result should match the expected value.");
 //     }
 
-//     @Test
-//     void testAwaitMessage() throws InterruptedException {
-//         MessageBusImpl bus = MessageBusImpl.getInstance();
-//         MicroService service = new DummyMicroService("ServiceI");
-//         Event<String> event = new Event<>() {};
 
-//         bus.register(service);
-//         bus.subscribeEvent(event.getClass(), service);
-//         bus.sendEvent(event);
-
-//         Message message = bus.awaitMessage(service);
-
-//         assertEquals(event, message, "Awaited message should match the sent event.");
-//     }
-
-//     @Test
-//     void testAwaitMessageThrowsException() {
-//         MessageBusImpl bus = MessageBusImpl.getInstance();
-//         MicroService service = new DummyMicroService("ServiceJ");
-
-//         assertThrows(IllegalStateException.class, () -> bus.awaitMessage(service), "Should throw IllegalStateException for unregistered service.");
-//     }
-// }
+}

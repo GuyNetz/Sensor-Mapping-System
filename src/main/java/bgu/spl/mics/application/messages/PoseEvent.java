@@ -8,7 +8,7 @@ public class PoseEvent implements Event<Pose> {
     private final Pose pose;
 
     //Constructor
-    public PoseEvent(Pose pose, int time) {
+    public PoseEvent(Pose pose) {
         this.pose = pose;
     }
 

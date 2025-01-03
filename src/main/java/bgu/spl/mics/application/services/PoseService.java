@@ -38,7 +38,7 @@ public class PoseService extends MicroService {
             
 
             // Send a PoseEvent with the current pose and time
-            PoseEvent poseEvent = new PoseEvent(currentPose, currentTime);
+            PoseEvent poseEvent = new PoseEvent(currentPose);
             sendEvent(poseEvent);
         });
         
