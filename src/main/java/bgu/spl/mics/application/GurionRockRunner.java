@@ -1,5 +1,6 @@
 package bgu.spl.mics.application;
 
+import java.util.ArrayList;
 import bgu.spl.mics.application.services.*;
 import bgu.spl.mics.application.objects.*;
 import com.google.gson.Gson;
@@ -37,12 +38,12 @@ public class GurionRockRunner {
     public static void main(String[] args) {
         System.out.println("Starting the GurionRock Pro Max Ultra Over 9000 simulation...");
 
-        if (args.length != 1) {
-            System.err.println("Usage: java GurionRockRunner <configuration file path>");
-            return;
-        }
+        // if (args.length != 1) {
+        //     System.err.println("Usage: java GurionRockRunner <configuration file path>");
+        //     return;
+        // }
 
-        String configFilePath = args[0];
+        String configFilePath = "/workspaces/spl assignment 2/example input/configuration_file.json";
 
         try {
             System.out.println("Debug 1");
@@ -50,15 +51,11 @@ public class GurionRockRunner {
             JsonObject config = parseJsonConfig(configFilePath);
 
             System.out.println("Debug 2");
-            // Extract simulation timing
+            // Initialize TimeService
             int tickDuration = config.get("TickTime").getAsInt();
             int duration = config.get("Duration").getAsInt();
-
-
-            // Initialize TimeService
             TimeService timeService = new TimeService(tickDuration, duration);
             
-
             // Initialize CameraServices
             JsonObject cameras = config.getAsJsonObject("Cameras");
             JsonArray camerasConfigurations = cameras.getAsJsonArray("CamerasConfigurations");
@@ -73,13 +70,6 @@ public class GurionRockRunner {
                 );
                 cameraServices[i] = new CameraService(camera);
             }
-
-            // Start Threads
-            for (CameraService cameraService : cameraServices) {
-                Thread cameraThread = new Thread(cameraService);
-                cameraThread.start();
-            }
-
 
             // Initialize LiDarServices
             JsonObject lidarWorkers = config.getAsJsonObject("LidarWorkers");
@@ -96,22 +86,12 @@ public class GurionRockRunner {
 
                 lidarServices[i] = (new LiDarService(worker));
             }
-            
-            // Start Threads
-            for (LiDarService lidarService : lidarServices) {
-                Thread lidarThread = new Thread(lidarService);
-                lidarThread.start();
-            }
-
-
+        
             System.out.println("Debug 3");
 
             // Initialize PoseService
             PoseService poseService = null;
-            // Create the GPSIMU object
             String poseDataPath = config.get("poseJsonFile").getAsString();
-
-            System.out.println("Debug 4");
 
             try(FileReader poseReader = new FileReader(poseDataPath)){
                 Gson gson = new Gson();
@@ -121,32 +101,13 @@ public class GurionRockRunner {
                 GPSIMU gpsimu = new GPSIMU();
                 for (Pose pose : poseData) {
                     gpsimu.updateTick(pose.getX(), pose.getY(), pose.getYaw(), pose.getTime());
-                }
-            
-            System.out.println("Debug 5");
-
-            // Create and start the PoseService
+                }            
                 poseService = new PoseService(gpsimu);
-                Thread poseServiceThread = new Thread(poseService);
-                poseServiceThread.start();
-            } catch (IOException e) {
-                e.printStackTrace();
             }
 
-            System.out.println("Debug 6");
-
             // Initialize FusionSlamService
-                // Create the Fusion Slam object
-                FusionSlam fusionSlam = FusionSlam.getInstance();
-
-                // Initialize service
-                FusionSlamService fusionSlamService = new FusionSlamService(fusionSlam);
-
-                // Start Thread
-                Thread fusionSlamThread = new Thread(fusionSlamService);
-                fusionSlamThread.start();
-
-                System.out.println("Debug 7");
+            FusionSlam fusionSlam = FusionSlam.getInstance();
+            FusionSlamService fusionSlamService = new FusionSlamService(fusionSlam);
                 
             // Start the simulation
             startSimulation(timeService, cameraServices, lidarServices, poseService, fusionSlamService);
@@ -202,35 +163,38 @@ public class GurionRockRunner {
         PoseService poseService,
         FusionSlamService fusionSlamService
     ) throws InterruptedException {
-        // Start TimeService
-        Thread timeThread = new Thread(timeService);
-        timeThread.start();
+        
+        List<Thread> threads = new ArrayList<>();
 
-        // Start camera and LiDAR services
+        // add camera and LiDAR services
         for (CameraService camera : cameraServices) {
-            new Thread(camera).start();
+            threads.add(new Thread(camera));
         }
         
         for (LiDarService lidar : lidarServices) {
-            new Thread(lidar).start();
+            threads.add(new Thread(lidar));
         }
 
-        // Start PoseService and FusionSlamService
-        new Thread(poseService).start();
-        new Thread(fusionSlamService).start();
+        // add PoseService and FusionSlamService
+        threads.add(new Thread(poseService));
+        threads.add( new Thread(fusionSlamService));
 
-        // Wait for TimeService to complete
-        timeThread.join();
+        // Start all threads
+        // for (Thread thread : threads) {
+        //     thread.start();
+        // }
 
-        //Terminate all services
-        for (CameraService camera : cameraServices) {
-            camera.stopService();
-        }
-        for (LiDarService lidar : lidarServices) {
-            lidar.stopService();
-        }
-        poseService.stopService();
-        fusionSlamService.stopService();
+        Thread timeThread = new Thread(timeService);
+        threads.add(timeThread);
+        
+        // Start TimeService 
+        timeThread.start();
+
+        System.out.println("before join");
+        // for(Thread thread : threads){
+        //     thread.join();
+        // }
+        System.out.println("after join");
     }
 }
 

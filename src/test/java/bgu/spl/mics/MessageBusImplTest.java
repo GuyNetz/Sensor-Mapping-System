@@ -139,58 +139,107 @@ class MessageBusImplTest {
         senderThread.join();
     }
 
+    /************** testing awaitMessage **************/
+    //Ensures sendEvent returns null when no MicroService is subscribed to the event type.
+    @Test
+    void testSendEventNoSubscribers() {
+        MessageBusImpl bus = MessageBusImpl.getInstance();
+        Event<Pose> event = new PoseEvent(new Pose(1.2f, 2.5f, 3.5f, 4));
 
+        // No subscribers registered for the event
+        Future<Pose> future = bus.sendEvent(event);
 
+        // Verify that the method returns null
+        assertNull(future);
+    }
 
-//     @Test
-//     void testSendEvent() {
-//         MessageBusImpl bus = MessageBusImpl.getInstance();
-//         MicroService service = new DummyMicroService("ServiceE");
-//         Event<String> event = new Event<>() {};
+    /**
+     * Ensures sendEvent adds the event to the correct MicroService queue
+     * and returns a non-null Future when there are subscribers.
+     */
+    @Test
+    void testSendEventWithSubscribers() throws InterruptedException {
+        MessageBusImpl bus = MessageBusImpl.getInstance();
+        MicroService subscriber = new TimeService(1, 30);
+        Event<Pose> event = new PoseEvent(new Pose(1.2f, 2.5f, 3.5f, 4));
 
-//         bus.register(service);
-//         bus.subscribeEvent(event.getClass(), service);
+        // Register the subscriber and subscribe it to the event type
+        bus.register(subscriber);
+        bus.subscribeEvent(PoseEvent.class, subscriber);
 
-//         Future<String> future = bus.sendEvent(event);
+        // Send the event
+        Future<Pose> future = bus.sendEvent(event);
 
-//         assertNotNull(future, "Future should not be null.");
-//         assertFalse(future.isDone(), "Future should not be resolved yet.");
-//         assertEquals(event, bus.queues.get(service).poll(), "Event should be added to the service's queue.");
-//     }
+        // Verify that a Future is returned and the event is added to the subscriber's queue
+        assertNotNull(future);
+        Message receivedMessage = bus.awaitMessage(subscriber);
+        assertEquals(event, receivedMessage);
+    }
 
-//     @Test
-//     void testSendBroadcast() {
-//         MessageBusImpl bus = MessageBusImpl.getInstance();
-//         MicroService service1 = new DummyMicroService("ServiceF");
-//         MicroService service2 = new DummyMicroService("ServiceG");
-//         Broadcast broadcast = new Broadcast() {};
+    
+    //Ensures sendEvent distributes events in a round-robin fashion among subscribers.
+    @Test
+    void testSendEventRoundRobin() throws InterruptedException {
+        MessageBusImpl bus = MessageBusImpl.getInstance();
+        MicroService subscriber1 = new TimeService(1, 30);
+        MicroService subscriber2 = new TimeService(2, 60); // Another TimeService for testing
+        Event<Pose> event1 = new PoseEvent(new Pose(1.2f, 2.5f, 3.5f, 4));
+        Event<Pose> event2 = new PoseEvent(new Pose(5.1f, 6.3f, 7.8f, 8));
 
-//         bus.register(service1);
-//         bus.register(service2);
-//         bus.subscribeBroadcast(broadcast.getClass(), service1);
-//         bus.subscribeBroadcast(broadcast.getClass(), service2);
+        // Register both subscribers and subscribe them to the event type
+        bus.register(subscriber1);
+        bus.register(subscriber2);
+        bus.subscribeEvent(PoseEvent.class, subscriber1);
+        bus.subscribeEvent(PoseEvent.class, subscriber2);
 
-//         bus.sendBroadcast(broadcast);
+        // Send the first event
+        bus.sendEvent(event1);
+        Message receivedBySubscriber1 = bus.awaitMessage(subscriber1);
 
-//         assertEquals(broadcast, bus.queues.get(service1).poll(), "Broadcast should be added to ServiceF's queue.");
-//         assertEquals(broadcast, bus.queues.get(service2).poll(), "Broadcast should be added to ServiceG's queue.");
-//     }
+        // Send the second event
+        bus.sendEvent(event2);
+        Message receivedBySubscriber2 = bus.awaitMessage(subscriber2);
 
-//     @Test
-//     void testComplete() {
-//         MessageBusImpl bus = MessageBusImpl.getInstance();
-//         MicroService service = new DummyMicroService("ServiceH");
-//         Event<String> event = new Event<>() {};
+        // Verify that events are distributed in round-robin order
+        assertEquals(event1, receivedBySubscriber1, "Subscriber 1 should receive the first event.");
+        assertEquals(event2, receivedBySubscriber2, "Subscriber 2 should receive the second event.");
+    }
 
-//         bus.register(service);
-//         bus.subscribeEvent(event.getClass(), service);
+        /**
+     * Ensures the Future returned by sendEvent can be resolved correctly
+     * when the event processing is complete.
+     */
+    @Test
+    void testSendEventFutureResolution() throws InterruptedException {
+        MessageBusImpl bus = MessageBusImpl.getInstance();
+        MicroService subscriber = new TimeService(1, 30);
+        Event<Pose> event = new PoseEvent(new Pose(1.2f, 2.5f, 3.5f, 4));
 
-//         Future<String> future = bus.sendEvent(event);
-//         bus.complete(event, "Result");
+        // Register the subscriber and subscribe it to the event type
+        bus.register(subscriber);
+        bus.subscribeEvent(PoseEvent.class, subscriber);
 
-//         assertTrue(future.isDone(), "Future should be resolved.");
-//         assertEquals("Result", future.get(), "Future result should match the expected value.");
-//     }
+        // Send the event
+        Future<Pose> future = bus.sendEvent(event);
+        assertNotNull(future, "sendEvent should return a Future for a subscribed event.");
 
+        // Process the event and resolve the Future
+        new Thread(() -> {
+            try {
+                Message receivedMessage = bus.awaitMessage(subscriber);
+                if (receivedMessage.equals(event)) {
+                    bus.complete(event, new Pose(10.0f, 20.0f, 30.0f, 40));
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }).start();
 
+        // Verify the Future is resolved with the correct result
+        Pose result = future.get(); // This will block until the Future is resolved
+        assertEquals(10.0f, result.getX());
+        assertEquals(20.0f, result.getY());
+        assertEquals(30.0f, result.getYaw());
+        assertEquals(40, result.getTime());
+    }
 }

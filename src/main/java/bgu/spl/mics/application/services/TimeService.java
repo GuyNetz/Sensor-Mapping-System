@@ -40,6 +40,7 @@ public class TimeService extends MicroService {
 
                     // Broadcast the current tick
                     sendBroadcast(new TickBroadcast(currentTick));
+                    System.out.println("Tick " + currentTick + " broadcasted");
 
                     // Sleep for the duration of the tick
                     Thread.sleep(TickTime);
@@ -47,15 +48,18 @@ public class TimeService extends MicroService {
                 } catch (InterruptedException e) {
                     // Graceful shutdown if interrupted
                     Thread.currentThread().interrupt();
+                    System.out.println("TimeService interrupted");
                     break;
                 }
             }
 
             // After the duration ends, broadcast TerminatedBroadcast
             sendBroadcast(new TerminatedBroadcast());
+            System.out.println("TerminatedBroadcast sent");
 
             // Terminate the service
             terminate();
+            System.out.println("TimeService terminated");
         });
 
         // Start the timer thread
