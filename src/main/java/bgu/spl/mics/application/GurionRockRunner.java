@@ -1,5 +1,6 @@
 package bgu.spl.mics.application;
 
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ArrayList;
@@ -11,6 +12,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import java.util.List;
 import java.io.FileReader;
@@ -79,27 +81,31 @@ public class GurionRockRunner {
                 int frequency = cameraConfig.get("frequency").getAsInt();
                 String camera_key = cameraConfig.get("camera_key").getAsString();
 
-                //getting current camera data from camera file
-                JsonArray currentCamera = camerasData.getAsJsonArray(camera_key);
-                JsonObject object = currentCamera.get(i).getAsJsonObject();
-                int time = object.get("time").getAsInt();
-                JsonArray currentCameraDetectedObjects = object.getAsJsonArray("detectedObjects");  
-
                 //creating a list of detected objects and a list of StampedDetectedObjects
-                List<DetectedObject> detectedObjectsList = new ArrayList<>();
+                
                 List<StampedDetectedObjects> StampedDetectedObjectsList = new ArrayList<>();
 
-                //going over all detected objects and creating a list of StampedDetectedObjects with time
-                if(currentCameraDetectedObjects != null){
-                    for (int j = 0; (j < currentCameraDetectedObjects.size()); j++) {
-                        JsonObject detectedObject = currentCameraDetectedObjects.get(j).getAsJsonObject();
-                        String detectedObjectID = detectedObject.get("id").getAsString();
-                        String detectedObjectDescription = detectedObject.get("description").getAsString();
-                        idToDescription.put(detectedObjectID, detectedObjectDescription);
-                        detectedObjectsList.add(new DetectedObject(detectedObjectID, detectedObjectDescription));
-                    } 
-                    StampedDetectedObjectsList.add(new StampedDetectedObjects(time, detectedObjectsList));
+                //getting current camera data from camera file
+                JsonArray currentCamera = camerasData.getAsJsonArray(camera_key);
+                for(JsonElement element : currentCamera){
+                    List<DetectedObject> detectedObjectsList = new ArrayList<>();
+                    JsonObject object = element.getAsJsonObject();
+                    int time = object.get("time").getAsInt();
+                    JsonArray currentCameraDetectedObjects = object.getAsJsonArray("detectedObjects"); 
+
+                    //going over all detected objects and creating a list of StampedDetectedObjects with time
+                    if(currentCameraDetectedObjects != null){
+                        for (int j = 0; (j < currentCameraDetectedObjects.size()); j++) {
+                            JsonObject detectedObject = currentCameraDetectedObjects.get(j).getAsJsonObject();
+                            String detectedObjectID = detectedObject.get("id").getAsString();
+                            String detectedObjectDescription = detectedObject.get("description").getAsString();
+                            idToDescription.put(detectedObjectID, detectedObjectDescription);
+                            detectedObjectsList.add(new DetectedObject(detectedObjectID, detectedObjectDescription));
+                        } 
+                        StampedDetectedObjectsList.add(new StampedDetectedObjects(time, detectedObjectsList));
+                    }
                 }
+                
                 //creating a camera and a camera service
                 Camera camera = new Camera(id, frequency, StampedDetectedObjectsList);
                 cameraServices[i] = new CameraService(camera);
@@ -112,7 +118,7 @@ public class GurionRockRunner {
             // JsonObject lidarsData = parseJsonConfig("/workspaces/spl assignment 2/example input/lidar_data.json"); // Try to change that
             LiDarDataBase lidarDataBase = LiDarDataBase.getInstance("/workspaces/spl assignment 2/example input/lidar_data.json");
 
-            // loop ver all lidars
+            // loop over all lidars
             LiDarService[] lidarServices = new LiDarService[lidarsConfigurations.size()];
             for (int i = 0; i < lidarsConfigurations.size(); i++) {
                 
@@ -130,8 +136,8 @@ public class GurionRockRunner {
                     List<CloudPoint> cloudPointList = new ArrayList<>();
                     for(List<Double> pointList : point.getCloudPoints()){
                         cloudPointList.add(new CloudPoint(pointList.get(0), pointList.get(1)));
-                        trackedObjectsList.add(new TrackedObject(point.getID(), point.getTime(), idToDescription.get(point.getID()), cloudPointList));
                     }
+                    trackedObjectsList.add(new TrackedObject(point.getID(), point.getTime(), idToDescription.get(point.getID()), cloudPointList));
                 }
 
                 //creating a lidar and a lidar service
@@ -140,7 +146,7 @@ public class GurionRockRunner {
             }
 
             /*********************************** Initialize PoseService ***********************************/
-            JsonArray poseData = parseJsonArrayConfig("/workspaces/SPL-Assignment-2/example input/pose_data.json"); // Try to change that
+            JsonArray poseData = parseJsonArrayConfig("/workspaces/spl assignment 2/example input/pose_data.json"); // Try to change that
             List<Pose> poseList = new LinkedList<>();
 
             // loop over all poses

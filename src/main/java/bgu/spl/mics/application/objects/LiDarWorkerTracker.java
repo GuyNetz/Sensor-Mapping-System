@@ -19,7 +19,7 @@ public class LiDarWorkerTracker {
     public LiDarWorkerTracker(int id, int frequency, List<TrackedObject> trackedObjectsList) {
         this.id = id;
         this.frequency = frequency;
-        this.trackedObjectsList = new LinkedList<>();
+        this.trackedObjectsList = trackedObjectsList;
         this.status = STATUS.UP;
         
     }
