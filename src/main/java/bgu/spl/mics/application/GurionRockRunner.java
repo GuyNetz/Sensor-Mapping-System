@@ -43,7 +43,7 @@ public class GurionRockRunner {
         //     return;
         // }
 
-        String configFilePath = "/workspaces/spl assignment 2/example input/configuration_file.json";
+        String configFilePath = "/workspaces/SPL-Assignment-2/example input/configuration_file.json";
 
         try {      
             System.out.println("Parsing configuration file...");
@@ -64,7 +64,7 @@ public class GurionRockRunner {
             JsonArray camerasConfigurations = cameras.getAsJsonArray("CamerasConfigurations");
             // String camerasJsonPath = cameras.get("camera_datas_path").getAsString();
             // JsonObject camerasData = parseJsonConfig(camerasJsonPath);
-            JsonObject camerasData = parseJsonConfig("/workspaces/spl assignment 2/example input/camera_data.json");
+            JsonObject camerasData = parseJsonConfig("/workspaces/SPL-Assignment-2/example input/camera_data.json"); // Try to change that
 
             //loop over all cameras
             CameraService[] cameraServices = new CameraService[camerasConfigurations.size()];
@@ -80,7 +80,7 @@ public class GurionRockRunner {
                 JsonArray currentCamera = camerasData.getAsJsonArray(camera_key);
                 JsonObject object = currentCamera.get(i).getAsJsonObject();
                 int time = object.get("time").getAsInt();
-                JsonArray currentCameraDetectedObjects = object.getAsJsonArray("detected_objects");  
+                JsonArray currentCameraDetectedObjects = object.getAsJsonArray("detectedObjects");  
 
                 //creating a list of detected objects and a list of StampedDetectedObjects
                 List<DetectedObject> detectedObjectsList = new ArrayList<>();
@@ -101,23 +101,23 @@ public class GurionRockRunner {
                 cameraServices[i] = new CameraService(camera);
             }
 
-            // Initialize LiDarServices
-            JsonObject lidarWorkers = config.getAsJsonObject("LidarWorkers");
-            JsonArray lidarConfigurations = lidarWorkers.getAsJsonArray("LidarConfigurations");
+            /*********************************** Initialize LiDarServices ***********************************/
+            JsonObject lidars = config.getAsJsonObject("LidarWorkers");
+            JsonArray lidarsConfigurations = lidars.getAsJsonArray("LidarConfigurations");
+            JsonObject lidarsData = parseJsonConfig("/workspaces/SPL-Assignment-2/example input/lidar_data.json"); // Try to change that
 
-            LiDarService[] lidarServices = new LiDarService[lidarConfigurations.size()];
-            for (int i = 0; i < lidarConfigurations.size(); i++) {
-                JsonObject lidarConfig = lidarConfigurations.get(i).getAsJsonObject();
+            //loop over all lidars
+            LiDarService[] lidarServices = new LiDarService[lidarsConfigurations.size()];
+            for (int i = 0; i < lidarsConfigurations.size(); i++) {
 
-                LiDarWorkerTracker worker = new LiDarWorkerTracker(
-                    lidarConfig.get("id").getAsInt(), 
-                    lidarConfig.get("frequency").getAsInt()
-                );
-
-                lidarServices[i] = (new LiDarService(worker));
+                //getting lidar data from config
+                JsonObject lidarConfig = lidarsConfigurations.get(i).getAsJsonObject();
+                int id = cameraConfig.get("id").getAsInt();
+                int frequency = cameraConfig.get("frequency").getAsInt();
+                String camera_key = cameraConfig.get("camera_key").getAsString();
             }
 
-            // Initialize PoseService
+            /*********************************** Initialize PoseService ***********************************/
             PoseService poseService = null;
             String poseDataPath = config.get("poseJsonFile").getAsString();
 
