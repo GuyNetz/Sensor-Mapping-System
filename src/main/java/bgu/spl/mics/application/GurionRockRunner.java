@@ -1,5 +1,7 @@
 package bgu.spl.mics.application;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.ArrayList;
 import bgu.spl.mics.application.services.*;
 import bgu.spl.mics.application.objects.*;
@@ -36,6 +38,7 @@ public class GurionRockRunner {
      * @param args Command-line arguments. The first argument is expected to be the path to the configuration file.
      */
     public static void main(String[] args) {
+        Map <String, String>  idToDescription = new HashMap<>();
         System.out.println("Starting the GurionRock Pro Max Ultra Over 9000 simulation...");
 
         // if (args.length != 1) {
@@ -43,7 +46,7 @@ public class GurionRockRunner {
         //     return;
         // }
 
-        String configFilePath = "/workspaces/SPL-Assignment-2/example input/configuration_file.json";
+        String configFilePath = "/workspaces/spl assignment 2/example input/configuration_file.json";
 
         try {      
             System.out.println("Parsing configuration file...");
@@ -51,7 +54,7 @@ public class GurionRockRunner {
             JsonObject config = parseJsonConfig(configFilePath);
 
             System.out.println("Initializing services...");
-            // Initialize TimeService
+            /*********************************** Initialize TimeService ***********************************/
             int tickDuration = config.get("TickTime").getAsInt();
             int duration = config.get("Duration").getAsInt();
             TimeService timeService = new TimeService(tickDuration, duration);
@@ -64,7 +67,7 @@ public class GurionRockRunner {
             JsonArray camerasConfigurations = cameras.getAsJsonArray("CamerasConfigurations");
             // String camerasJsonPath = cameras.get("camera_datas_path").getAsString();
             // JsonObject camerasData = parseJsonConfig(camerasJsonPath);
-            JsonObject camerasData = parseJsonConfig("/workspaces/SPL-Assignment-2/example input/camera_data.json"); // Try to change that
+            JsonObject camerasData = parseJsonConfig("/workspaces/spl assignment 2/example input/camera_data.json"); // Try to change that
 
             //loop over all cameras
             CameraService[] cameraServices = new CameraService[camerasConfigurations.size()];
@@ -92,6 +95,7 @@ public class GurionRockRunner {
                         JsonObject detectedObject = currentCameraDetectedObjects.get(j).getAsJsonObject();
                         String detectedObjectID = detectedObject.get("id").getAsString();
                         String detectedObjectDescription = detectedObject.get("description").getAsString();
+                        idToDescription.put(detectedObjectID, detectedObjectDescription);
                         detectedObjectsList.add(new DetectedObject(detectedObjectID, detectedObjectDescription));
                     } 
                     StampedDetectedObjectsList.add(new StampedDetectedObjects(time, detectedObjectsList));
@@ -104,17 +108,35 @@ public class GurionRockRunner {
             /*********************************** Initialize LiDarServices ***********************************/
             JsonObject lidars = config.getAsJsonObject("LidarWorkers");
             JsonArray lidarsConfigurations = lidars.getAsJsonArray("LidarConfigurations");
-            JsonObject lidarsData = parseJsonConfig("/workspaces/SPL-Assignment-2/example input/lidar_data.json"); // Try to change that
+            //NEED TO CHANGE THE WAY WE GET THE LIDAR DATA TO BE FROM THE CONFIGURATION FILE//
+            // JsonObject lidarsData = parseJsonConfig("/workspaces/spl assignment 2/example input/lidar_data.json"); // Try to change that
+            LiDarDataBase lidarDataBase = LiDarDataBase.getInstance("/workspaces/spl assignment 2/example input/lidar_data.json");
 
             //loop over all lidars
             LiDarService[] lidarServices = new LiDarService[lidarsConfigurations.size()];
             for (int i = 0; i < lidarsConfigurations.size(); i++) {
 
-                //getting lidar data from config
+                //getting lidar data from config(id and frequency)
                 JsonObject lidarConfig = lidarsConfigurations.get(i).getAsJsonObject();
-                int id = cameraConfig.get("id").getAsInt();
-                int frequency = cameraConfig.get("frequency").getAsInt();
-                String camera_key = cameraConfig.get("camera_key").getAsString();
+                int id = lidarConfig.get("id").getAsInt();
+                int frequency = lidarConfig.get("frequency").getAsInt();
+
+                //creating a list of tracked objects for the lidar
+                List<TrackedObject> trackedObjectsList = new ArrayList<>();
+
+                //going over the lidarDataBase and adding the tracked objects to the trackedObjectsList
+                List<StampedCloudPoints> stampedCloudPoints = lidarDataBase.getCloudPoints();
+                for (StampedCloudPoints point : stampedCloudPoints) {
+                    List<CloudPoint> cloudPointList = new ArrayList<>();
+                    for(List<Double> pointList : point.getCloudPoints()){
+                        cloudPointList.add(new CloudPoint(pointList.get(0), pointList.get(1)));
+                        trackedObjectsList.add(new TrackedObject(point.getID(), point.getTime(), idToDescription.get(point.getID()), cloudPointList));
+                    }
+                }
+
+                //creating a lidar and a lidar service
+                LiDarWorkerTracker lidar = new LiDarWorkerTracker(id, frequency, trackedObjectsList );
+                lidarServices[i] = new LiDarService(lidar);
             }
 
             /*********************************** Initialize PoseService ***********************************/
@@ -133,7 +155,7 @@ public class GurionRockRunner {
                 poseService = new PoseService(gpsimu);
             }
 
-            // Initialize FusionSlamService
+            /*********************************** Initialize FusionSlamService ***********************************/
             FusionSlam fusionSlam = FusionSlam.getInstance();
             FusionSlamService fusionSlamService = new FusionSlamService(fusionSlam);
             
