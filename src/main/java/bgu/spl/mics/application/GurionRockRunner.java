@@ -45,29 +45,59 @@ public class GurionRockRunner {
 
         String configFilePath = "/workspaces/spl assignment 2/example input/configuration_file.json";
 
-        try {
-            System.out.println("Debug 1");
+        try {      
+            System.out.println("Parsing configuration file...");
             // Parse the configuration file using GSON
             JsonObject config = parseJsonConfig(configFilePath);
 
-            System.out.println("Debug 2");
+            System.out.println("Initializing services...");
             // Initialize TimeService
             int tickDuration = config.get("TickTime").getAsInt();
             int duration = config.get("Duration").getAsInt();
             TimeService timeService = new TimeService(tickDuration, duration);
             
-            // Initialize CameraServices
+
+
+            /*********************************** Initialize CameraServices ***********************************/
+            // Getting the relevant JSON objects
             JsonObject cameras = config.getAsJsonObject("Cameras");
             JsonArray camerasConfigurations = cameras.getAsJsonArray("CamerasConfigurations");
+            // String camerasJsonPath = cameras.get("camera_datas_path").getAsString();
+            // JsonObject camerasData = parseJsonConfig(camerasJsonPath);
+            JsonObject camerasData = parseJsonConfig("/workspaces/spl assignment 2/example input/camera_data.json");
 
+            //loop over all cameras
             CameraService[] cameraServices = new CameraService[camerasConfigurations.size()];
             for (int i = 0; i < camerasConfigurations.size(); i++) {
+            
+                //getting camera data from config
                 JsonObject cameraConfig = camerasConfigurations.get(i).getAsJsonObject();
+                int id = cameraConfig.get("id").getAsInt();
+                int frequency = cameraConfig.get("frequency").getAsInt();
+                String camera_key = cameraConfig.get("camera_key").getAsString();
 
-                Camera camera = new Camera(
-                    cameraConfig.get("id").getAsInt(),
-                    cameraConfig.get("frequency").getAsInt()
-                );
+                //getting current camera data from camera file
+                JsonArray currentCamera = camerasData.getAsJsonArray(camera_key);
+                JsonObject object = currentCamera.get(i).getAsJsonObject();
+                int time = object.get("time").getAsInt();
+                JsonArray currentCameraDetectedObjects = object.getAsJsonArray("detected_objects");  
+
+                //creating a list of detected objects and a list of StampedDetectedObjects
+                List<DetectedObject> detectedObjectsList = new ArrayList<>();
+                List<StampedDetectedObjects> StampedDetectedObjectsList = new ArrayList<>();
+
+                //going over all detected objects and creating a list of StampedDetectedObjects with time
+                if(currentCameraDetectedObjects != null){
+                    for (int j = 0; (j < currentCameraDetectedObjects.size()); j++) {
+                        JsonObject detectedObject = currentCameraDetectedObjects.get(j).getAsJsonObject();
+                        String detectedObjectID = detectedObject.get("id").getAsString();
+                        String detectedObjectDescription = detectedObject.get("description").getAsString();
+                        detectedObjectsList.add(new DetectedObject(detectedObjectID, detectedObjectDescription));
+                    } 
+                    StampedDetectedObjectsList.add(new StampedDetectedObjects(time, detectedObjectsList));
+                }
+                //creating a camera and a camera service
+                Camera camera = new Camera(id, frequency, StampedDetectedObjectsList);
                 cameraServices[i] = new CameraService(camera);
             }
 
@@ -86,8 +116,6 @@ public class GurionRockRunner {
 
                 lidarServices[i] = (new LiDarService(worker));
             }
-        
-            System.out.println("Debug 3");
 
             // Initialize PoseService
             PoseService poseService = null;
@@ -108,10 +136,13 @@ public class GurionRockRunner {
             // Initialize FusionSlamService
             FusionSlam fusionSlam = FusionSlam.getInstance();
             FusionSlamService fusionSlamService = new FusionSlamService(fusionSlam);
-                
+            
+            System.out.println("Starting simulation...");
             // Start the simulation
             startSimulation(timeService, cameraServices, lidarServices, poseService, fusionSlamService);
+            System.out.println("Simulation completed.");
 
+            System.out.println("Building output file...");
             //build the output file
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             StatisticalFolder stats = StatisticalFolder.getInstance();
@@ -122,8 +153,7 @@ public class GurionRockRunner {
             try (FileWriter writer = new FileWriter("output.json")) {
                 gson.toJson(outputData, writer); 
             }
-            System.out.println("Output file created successfully.");
-            System.out.println("Simulation completed successfully.");
+            System.out.println("Output file created: output.json");
 
         } catch (IOException e) {
             System.err.println("Error reading configuration file: " + e.getMessage());
@@ -162,11 +192,12 @@ public class GurionRockRunner {
         LiDarService[] lidarServices,
         PoseService poseService,
         FusionSlamService fusionSlamService
-    ) throws InterruptedException {
+    ) throws InterruptedException {   
         
+        // Create a list of threads for all services
         List<Thread> threads = new ArrayList<>();
 
-        // add camera and LiDAR services
+        // add camera and LiDAR services to the threads list
         for (CameraService camera : cameraServices) {
             threads.add(new Thread(camera));
         }
@@ -175,26 +206,26 @@ public class GurionRockRunner {
             threads.add(new Thread(lidar));
         }
 
-        // add PoseService and FusionSlamService
+        // add PoseService and FusionSlamService to the threads list
         threads.add(new Thread(poseService));
         threads.add( new Thread(fusionSlamService));
 
-        // Start all threads
-        // for (Thread thread : threads) {
-        //     thread.start();
-        // }
+        // Start all threads except TimeService
+        for (Thread thread : threads) {
+            thread.start();
+        }
 
+        // Add TimeService to the threads list
         Thread timeThread = new Thread(timeService);
         threads.add(timeThread);
         
-        // Start TimeService 
+        // Start TimeService thread
         timeThread.start();
 
-        System.out.println("before join");
-        // for(Thread thread : threads){
-        //     thread.join();
-        // }
-        System.out.println("after join");
+        // Wait for all threads to finish before returning
+        for(Thread thread : threads){
+            thread.join();
+        }  
     }
 }
 

@@ -15,11 +15,12 @@ public class Camera {
     private List<StampedDetectedObjects> detectedObjectsList;
 
     // Constructor
-    public Camera (int id, int frequency) {
+    public Camera (int id, int frequency, List<StampedDetectedObjects> detectedObjectsList) {
         this.id = id;
         this.frequency = frequency;
+        this.detectedObjectsList = detectedObjectsList;
         this.status = STATUS.UP;
-        this.detectedObjectsList = new LinkedList<>();
+        
     }
 
     // Methods

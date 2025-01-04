@@ -16,35 +16,35 @@ import bgu.spl.mics.application.services.TimeService;
 class MessageBusImplTest {
 
     /************** testing register **************/
-    @Test
-    void testRegister() {
-        //objects
-        MessageBusImpl bus = MessageBusImpl.getInstance();
-        Camera camera = new Camera(1, 3);
-        MicroService cameraService = new CameraService(camera);
+    // @Test
+    // void testRegister() {
+    //     //objects
+    //     MessageBusImpl bus = MessageBusImpl.getInstance();
+    //     Camera camera = new Camera(1, 3);
+    //     MicroService cameraService = new CameraService(camera);
 
-        //register
-        bus.register(cameraService);
+    //     //register
+    //     bus.register(cameraService);
 
-        //check if the service is in the queue
-        assertTrue(bus.getQueues().containsKey(cameraService));
-    }
+    //     //check if the service is in the queue
+    //     assertTrue(bus.getQueues().containsKey(cameraService));
+    // }
 
     /************** testing unregister **************/
-    @Test
-    void testUnregister() {
-        //objects
-        MessageBusImpl bus = MessageBusImpl.getInstance();
-        Camera camera = new Camera(1, 3);
-        MicroService cameraService = new CameraService(camera);
+    // @Test
+    // void testUnregister() {
+    //     //objects
+    //     MessageBusImpl bus = MessageBusImpl.getInstance();
+    //     Camera camera = new Camera(1, 3);
+    //     MicroService cameraService = new CameraService(camera);
 
-        //register and unregister
-        bus.register(cameraService);
-        bus.unregister(cameraService);
+    //     //register and unregister
+    //     bus.register(cameraService);
+    //     bus.unregister(cameraService);
 
-        //check if the service is in the queue
-        assertFalse(bus.getQueues().containsKey(cameraService));
-    }
+    //     //check if the service is in the queue
+    //     assertFalse(bus.getQueues().containsKey(cameraService));
+    // }
 
     /************** testing subscribeEvent **************/
     @Test

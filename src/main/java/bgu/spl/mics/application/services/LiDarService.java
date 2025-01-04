@@ -50,7 +50,7 @@ public class LiDarService extends MicroService {
             if (LiDarWorkerTracker.getStatus() == STATUS.UP) {
 
                 // Check if the current tick is a multiple of the LiDAR worker's frequency
-                if (tickBroadcast.getCurrentTick() % LiDarWorkerTrackerFreq == 0) {
+                if (tickBroadcast.getCurrentTick() % LiDarWorkerTrackerFreq == 0 && (LiDarWorkerTracker.getTrackedObjectsList().size() != 0)) {
 
                     // Process the data and send a TrackedObjectsEvent to the MessageBus
                     sendEvent(new TrackedObjectsEvent(LiDarWorkerTracker.getTrackedObjectsList()));
@@ -75,7 +75,7 @@ public class LiDarService extends MicroService {
         subscribeEvent(DetectObjectsEvent.class, detectObjectsEvent -> {
            
             // Check if the LiDAR worker is operational
-            if (LiDarWorkerTracker.getStatus() == STATUS.UP) {
+            if (LiDarWorkerTracker.getStatus() == STATUS.UP && (LiDarWorkerTracker.getTrackedObjectsList().size() != 0)) {
 
                 // Process the data and send a TrackedObjectsEvent to the MessageBus
                 sendEvent(new TrackedObjectsEvent(LiDarWorkerTracker.getTrackedObjectsList()));

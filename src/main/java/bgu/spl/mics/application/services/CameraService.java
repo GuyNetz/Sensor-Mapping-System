@@ -47,7 +47,7 @@ public class CameraService extends MicroService {
             if (camera.getStatus() == STATUS.UP) {
 
                 // Check if the current tick is a multiple of the camera's frequency
-                if (tickBroadcast.getCurrentTick() % cameraFrequency == 0) {
+                if (tickBroadcast.getCurrentTick() % cameraFrequency == 0 && (camera.getDetectedObjectsList().size() != 0)) {
 
                     // Send a DetectObjectsEvent to the MessageBus
                     sendEvent(new DetectObjectsEvent(tickBroadcast.getCurrentTick() ,camera.getDetectedObjectsList()));
