@@ -3,6 +3,8 @@ package bgu.spl.mics.application;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ArrayList;
+import java.util.LinkedList;
+
 import bgu.spl.mics.application.services.*;
 import bgu.spl.mics.application.objects.*;
 import com.google.gson.Gson;
@@ -10,8 +12,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.reflect.TypeToken;
-import java.lang.reflect.Type;
 import java.util.List;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -112,10 +112,10 @@ public class GurionRockRunner {
             // JsonObject lidarsData = parseJsonConfig("/workspaces/spl assignment 2/example input/lidar_data.json"); // Try to change that
             LiDarDataBase lidarDataBase = LiDarDataBase.getInstance("/workspaces/spl assignment 2/example input/lidar_data.json");
 
-            //loop over all lidars
+            // loop ver all lidars
             LiDarService[] lidarServices = new LiDarService[lidarsConfigurations.size()];
             for (int i = 0; i < lidarsConfigurations.size(); i++) {
-
+                
                 //getting lidar data from config(id and frequency)
                 JsonObject lidarConfig = lidarsConfigurations.get(i).getAsJsonObject();
                 int id = lidarConfig.get("id").getAsInt();
@@ -140,20 +140,31 @@ public class GurionRockRunner {
             }
 
             /*********************************** Initialize PoseService ***********************************/
-            PoseService poseService = null;
-            String poseDataPath = config.get("poseJsonFile").getAsString();
+            JsonArray poseData = parseJsonArrayConfig("/workspaces/SPL-Assignment-2/example input/pose_data.json"); // Try to change that
+            List<Pose> poseList = new LinkedList<>();
 
-            try(FileReader poseReader = new FileReader(poseDataPath)){
-                Gson gson = new Gson();
-                Type poseListType = new TypeToken<List<Pose>>(){}.getType();
-                List<Pose> poseData = gson.fromJson(poseReader, poseListType);
+            // loop over all poses
+            for (int i = 0; i < poseData.size(); i++){
 
-                GPSIMU gpsimu = new GPSIMU();
-                for (Pose pose : poseData) {
-                    gpsimu.updateTick(pose.getX(), pose.getY(), pose.getYaw(), pose.getTime());
-                }            
-                poseService = new PoseService(gpsimu);
+                //getting pose data from config
+                JsonObject poseConfig = poseData.get(i).getAsJsonObject();
+                int time = poseConfig.get("time").getAsInt();
+                float x = poseConfig.get("x").getAsFloat();
+                float y = poseConfig.get("y").getAsFloat();
+                float yaw = poseConfig.get("yaw").getAsFloat();
+
+                poseList.add(new Pose(x,y,yaw,time));
             }
+
+            // Initialize GPSIMU with the pose data
+            GPSIMU gpsimu = new GPSIMU();
+            for (Pose pose : poseList) {
+                gpsimu.updateTick(pose.getX(), pose.getY(), pose.getYaw(), pose.getTime());
+            }
+
+            // Create the PoseService
+            PoseService poseService = new PoseService(gpsimu);
+
 
             /*********************************** Initialize FusionSlamService ***********************************/
             FusionSlam fusionSlam = FusionSlam.getInstance();
@@ -195,6 +206,12 @@ public class GurionRockRunner {
     private static JsonObject parseJsonConfig(String filePath) throws IOException {
         try (FileReader reader = new FileReader(filePath)) {
             return JsonParser.parseReader(reader).getAsJsonObject();
+        }
+    }
+
+    private static JsonArray parseJsonArrayConfig(String filePath) throws IOException {
+        try (FileReader reader = new FileReader(filePath)) {
+            return JsonParser.parseReader(reader).getAsJsonArray();
         }
     }
 
