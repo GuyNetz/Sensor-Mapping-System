@@ -1,5 +1,9 @@
 package bgu.spl.mics.application.services;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.objects.Camera;
 import bgu.spl.mics.application.messages.CrashedBroadcast;
@@ -7,6 +11,7 @@ import bgu.spl.mics.application.messages.DetectObjectsEvent;
 import bgu.spl.mics.application.messages.TerminatedBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.objects.STATUS;
+import bgu.spl.mics.application.objects.StampedDetectedObjects;
 import bgu.spl.mics.application.objects.StatisticalFolder;
 
 
@@ -47,15 +52,25 @@ public class CameraService extends MicroService {
             if (camera.getStatus() == STATUS.UP) {
 
                 // Check if the current tick is a multiple of the camera's frequency
-                if (tickBroadcast.getCurrentTick() % cameraFrequency == 0 && (camera.getDetectedObjectsList().size() != 0)) {
+                if (tickBroadcast.getCurrentTick() % cameraFrequency == 0) {
 
                     // Send a DetectObjectsEvent to the MessageBus
-                    sendEvent(new DetectObjectsEvent(tickBroadcast.getCurrentTick() ,camera.getDetectedObjectsList()));
+                    List<StampedDetectedObjects> matchingObjects = new LinkedList<>();
+                    for (StampedDetectedObjects stampedObject : camera.getDetectedObjectsList()) {
+                        if (stampedObject.getTime() == tickBroadcast.getCurrentTick()) {
+                            matchingObjects.add(stampedObject);
+                        }
+                    }
+                    if(!matchingObjects.isEmpty()){
+                        sendEvent(new DetectObjectsEvent(tickBroadcast.getCurrentTick() , matchingObjects));
 
-                    // Log the detected objects in the StatisticalFolder
-                    StatisticalFolder.getInstance().logDetectedObjects(camera.getID(), tickBroadcast.getCurrentTick(), camera.getDetectedObjectsList());
+                        // Log the detected objects in the StatisticalFolder
+                        StatisticalFolder.getInstance().logDetectedObjects(camera.getID(), tickBroadcast.getCurrentTick(), matchingObjects);
                     }
                 }
+
+                    
+            }
         });
 
         // Subscribe to TerminatedBroadcast

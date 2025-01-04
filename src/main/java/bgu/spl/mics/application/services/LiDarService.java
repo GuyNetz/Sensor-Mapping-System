@@ -1,14 +1,20 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.application.messages.DetectObjectsEvent;
+
+import java.util.LinkedList;
+import java.util.List;
+
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.objects.LiDarWorkerTracker;
 import bgu.spl.mics.application.messages.CrashedBroadcast;
 import bgu.spl.mics.application.messages.TerminatedBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.objects.STATUS;
+import bgu.spl.mics.application.objects.StampedDetectedObjects;
 import bgu.spl.mics.application.messages.TrackedObjectsEvent;
 import bgu.spl.mics.application.objects.StatisticalFolder;
+import bgu.spl.mics.application.objects.TrackedObject;
 
 
 
@@ -53,10 +59,18 @@ public class LiDarService extends MicroService {
                 if (tickBroadcast.getCurrentTick() % LiDarWorkerTrackerFreq == 0 && (LiDarWorkerTracker.getTrackedObjectsList().size() != 0)) {
 
                     // Process the data and send a TrackedObjectsEvent to the MessageBus
-                    sendEvent(new TrackedObjectsEvent(LiDarWorkerTracker.getTrackedObjectsList()));
+                    List<TrackedObject> matchingObjects = new LinkedList<>();
+                    for (TrackedObject trackedObject : LiDarWorkerTracker.getTrackedObjectsList()) {
+                        if (trackedObject.getTime() == tickBroadcast.getCurrentTick()) {
+                            matchingObjects.add(trackedObject);
+                        }
+                    }
+                    if(!matchingObjects.isEmpty()){
+                        sendEvent(new TrackedObjectsEvent(matchingObjects));
 
-                    // Log the tracked objects in the StatisticalFolder
-                    StatisticalFolder.getInstance().logTrackedObjects(LiDarWorkerTracker.getID(), tickBroadcast.getCurrentTick(), LiDarWorkerTracker.getTrackedObjectsList());
+                        // Log the tracked objects in the StatisticalFolder
+                        StatisticalFolder.getInstance().logTrackedObjects(LiDarWorkerTracker.getID(), tickBroadcast.getCurrentTick(), matchingObjects);
+                    }
                 }
             }
         });

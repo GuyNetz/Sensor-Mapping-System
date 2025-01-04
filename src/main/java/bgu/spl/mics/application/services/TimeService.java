@@ -43,7 +43,7 @@ public class TimeService extends MicroService {
                     System.out.println("Tick " + currentTick + " broadcasted");
 
                     // Sleep for the duration of the tick
-                    Thread.sleep(TickTime);
+                    Thread.sleep(TickTime * 1000L);
 
                 } catch (InterruptedException e) {
                     // Graceful shutdown if interrupted

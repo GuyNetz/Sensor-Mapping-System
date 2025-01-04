@@ -13,7 +13,7 @@ public class LiDarWorkerTracker {
     private int id;
     private int frequency;
     private STATUS status; // "Up", "Down", "Error"
-    private List<TrackedObject> trackedObjectsList;
+    private List<TrackedObject> lastTrackedObjects;
 
     //Constructor
     public LiDarWorkerTracker(int id, int frequency, List<TrackedObject> trackedObjectsList) {
@@ -44,5 +44,7 @@ public class LiDarWorkerTracker {
     public void setStatus(STATUS status) {
         this.status = status;
     }
+
+
     
 }
