@@ -28,6 +28,7 @@ public class LiDarService extends MicroService {
     private LiDarWorkerTracker LiDarWorkerTracker;
     private int LiDarWorkerTrackerFreq;
     private int curTick;
+    
 
     /**
      * Constructor for LiDarService.
@@ -114,5 +115,8 @@ public class LiDarService extends MicroService {
 
     public void stopService() {
         terminate(); // This calls the protected method from MicroService
+    }
+    public LiDarWorkerTracker getLiDarWorkerTracker() {
+        return LiDarWorkerTracker;
     }
 }

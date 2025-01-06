@@ -9,6 +9,13 @@
             "name": "GurionRockRunner",
             "request": "launch",
             "mainClass": "bgu.spl.mics.application.GurionRockRunner",
+            "projectName": "spl224ass2"
+        },
+        {
+            "type": "java",
+            "name": "GurionRockRunner",
+            "request": "launch",
+            "mainClass": "bgu.spl.mics.application.GurionRockRunner",
             "projectName": "spl225ass2"
         },
         {

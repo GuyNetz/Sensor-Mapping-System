@@ -197,9 +197,33 @@ public class GurionRockRunner {
             // build the output file
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             StatisticalFolder stats = StatisticalFolder.getInstance();
-            List<LandMark> landMarks = fusionSlam.getLandMarks();
 
+            List<LandMark> landMarks = fusionSlam.getLandMarks();
+            //Get the error msg and the faulty sensor
+            String error = null;
+            String faultySensor = null;
+            //loop that finds the first camera that crashed and saves the error msg
+            for (CameraService cameraService : cameraServices){
+                if(cameraService.getCamera().getStatus() == STATUS.ERROR){
+                    Camera faultyCamera = cameraService.getCamera();
+                    error = faultyCamera.getErrorObject().getDescription();
+                    faultySensor = "Camera " + faultyCamera.getID();
+                }        
+            }
+
+            //loop that finds the first lidar that crashed and saves the error msg
+            for (LiDarService lidarService : lidarServices){
+                if(lidarService.getLiDarWorkerTracker().getStatus() == STATUS.ERROR){
+                    LiDarWorkerTracker faultyLiDar = lidarService.getLiDarWorkerTracker();
+                    error = faultyLiDar.getErrorObject().getDescription();
+                    faultySensor = "LiDar " + faultyLiDar.getID();
+                }        
+            }
+            
             OutputData outputData = new OutputData(stats, landMarks);
+            ErrorOutputData errorOutputData = new ErrorOutputData(error, faultySensor,);
+
+            
 
             try (FileWriter writer = new FileWriter("output.json")) {
                 gson.toJson(outputData, writer);
@@ -298,5 +322,25 @@ class OutputData {
         this.numTrackedObjects = stats.getNumTrackedObjects();
         this.numLandmarks = stats.getNumLandmarks();
         this.landMarks = landMarks;
+    }
+}
+
+@SuppressWarnings("unused")
+class ErrorOutputData {
+    private final String error;
+    private final String faultySensor;
+    private final List<Camera> lastCameraFrames;
+    private final List<LiDarWorkerTracker> lastLidarFrames;
+    private final List<Pose> poses;
+    private final OutputData statistics;
+   
+
+    public ErrorOutputData(String error, String faultySensor, List<Camera> lastCameraFrames, List<LiDarWorkerTracker> lastLidarFrames, List<Pose> poses, OutputData statistics) {
+        this.error = error;
+        this.faultySensor = faultySensor;
+        this.lastCameraFrames = lastCameraFrames;
+        this.lastLidarFrames = lastLidarFrames;
+        this.poses = poses;
+        this.statistics = statistics;
     }
 }

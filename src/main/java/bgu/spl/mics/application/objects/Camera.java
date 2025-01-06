@@ -12,6 +12,8 @@ public class Camera {
     private int frequency;
     private STATUS status; // "Up", "Down", "Error"
     private List<StampedDetectedObjects> detectedObjectsList;
+    private DetectedObject errorObject; // Field to store the detected object with an error
+
 
     // Constructor
     public Camera (int id, int frequency, List<StampedDetectedObjects> detectedObjectsList) {
@@ -19,7 +21,7 @@ public class Camera {
         this.frequency = frequency;
         this.detectedObjectsList = detectedObjectsList;
         this.status = STATUS.UP;
-        
+        this.errorObject = null;
     }
 
     // Methods
@@ -44,26 +46,33 @@ public class Camera {
     }
 
     public StampedDetectedObjects getNextObjectToProcess(int currentTick, int frequency) {
-    for (int i = 0; i < detectedObjectsList.size(); i++) {
-        StampedDetectedObjects stampedObject = detectedObjectsList.get(i);
-        
-        // Check if the object is ready to be processed
-        if (stampedObject.getTime() + frequency <= currentTick) {
+        for (int i = 0; i < detectedObjectsList.size(); i++) {
+            StampedDetectedObjects stampedObject = detectedObjectsList.get(i);
             
-            // Check for error condition
-            if (stampedObject.getDetectedObjects().stream()
-                    .anyMatch(detectedObject -> detectedObject.getId().equals("ERROR"))) {
-                setStatus(STATUS.ERROR); // Update camera status
-                return null; // Indicate an error occurred
+            // Check if the object is ready to be processed
+            if (stampedObject.getTime() + frequency <= currentTick) {
+                
+                // Check for error condition
+                for (DetectedObject detectedObject : stampedObject.getDetectedObjects()) {
+                    if (detectedObject.getId().equals("ERROR")) {
+                        errorObject = detectedObject; // Save the detected object with the error
+                        setStatus(STATUS.ERROR); // Update camera status
+                        return null; // Indicate an error occurred
+                    }
+                }
+    
+                // Remove and return the stamped object for processing
+                detectedObjectsList.remove(i);
+                return stampedObject;
             }
-
-            // Remove and return the stamped object for processing
-            detectedObjectsList.remove(i);
-            return stampedObject;
         }
+        return null; // No objects ready to process
     }
-    return null; // No objects ready to process
-}
+    
+    public DetectedObject getErrorObject() {
+        return errorObject;
+    }
+    
 
 
 }
