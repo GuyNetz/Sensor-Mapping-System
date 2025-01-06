@@ -105,10 +105,10 @@ public class LiDarService extends MicroService {
 
                     if (!matchingObjects.isEmpty()) {
                         sendEvent(new TrackedObjectsEvent(matchingObjects));
+                        // Log the tracked objects in the StatisticalFolder
+                        StatisticalFolder.getInstance().logTrackedObjects(LiDarWorkerTracker.getID(),
+                        detectObjectsEvent.getDetectionTime(), matchingObjects);
                     }
-                    // Log the tracked objects in the StatisticalFolder
-                    StatisticalFolder.getInstance().logTrackedObjects(LiDarWorkerTracker.getID(),
-                            detectObjectsEvent.getDetectionTime(), matchingObjects);
                 }
             }
         });

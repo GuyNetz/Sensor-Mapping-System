@@ -110,6 +110,7 @@ public class FusionSlam {
             //add the new object to the map
             landMarks.add(new LandMark(id, description, relativeCoordinates));
             StatisticalFolder.getInstance().incrementNumLandmarks();
+            System.out.println(id + description);
         }
 
     }

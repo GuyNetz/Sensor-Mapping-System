@@ -1,8 +1,5 @@
 package bgu.spl.mics.application.services;
 
-import java.util.LinkedList;
-import java.util.List;
-
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.objects.Camera;
 import bgu.spl.mics.application.messages.CrashedBroadcast;
@@ -47,16 +44,11 @@ public class CameraService extends MicroService {
     protected void initialize() {
         // Subscribe to TickBroadcasts
         subscribeBroadcast(TickBroadcast.class, tickBroadcast -> {
-            // Update the systemRuntime in the StatisticalFolder
-            StatisticalFolder stats = StatisticalFolder.getInstance();
-            stats.incrementSystemRuntime();
+            
             // Check if the camera is operational
             if (camera.getStatus() == STATUS.UP) {
 
                 // stampedObject.getTime() + cameraFrequency >= tickBroadcast.getCurrentTick()
-
-                // Send a DetectObjectsEvent to the MessageBus
-                // List<StampedDetectedObjects> matchingObjects = new LinkedList<>();
 
                 for (int i = 0; i < camera.getDetectedObjectsList().size(); i++) {
                     // Check for error condition in each stampedObject
@@ -79,20 +71,8 @@ public class CameraService extends MicroService {
                         }
                     }
                 }
-                // if (cameraFrequency == 0 || tickBroadcast.getCurrentTick() % cameraFrequency
-                // == 0) {
-                // if (!matchingObjects.isEmpty()) {
-                // sendEvent(new DetectObjectsEvent(tickBroadcast.getCurrentTick(),
-                // matchingObjects));
 
-                // // // Log the detected objects in the StatisticalFolder
-                // // StatisticalFolder.getInstance().logDetectedObjects(camera.getID(),
-                // // tickBroadcast.getCurrentTick(), matchingObjects);
-                // }
-                // }
             }
-
-            // }
         });
 
         // Subscribe to TerminatedBroadcast

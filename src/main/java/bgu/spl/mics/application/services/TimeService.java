@@ -4,7 +4,6 @@ import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.CrashedBroadcast;
 import bgu.spl.mics.application.messages.TerminatedBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
-import bgu.spl.mics.application.objects.StatisticalFolder;
 
 /**
  * TimeService acts as the global timer for the system, broadcasting
@@ -44,7 +43,6 @@ public class TimeService extends MicroService {
 
                     // Broadcast the current tick
                     sendBroadcast(new TickBroadcast(currentTick));
-                    System.out.println("Tick " + currentTick + " broadcasted");
 
                     // Sleep for the duration of the tick
                     Thread.sleep(TickTime * 1000L);

@@ -11,6 +11,7 @@ import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.messages.TrackedObjectsEvent;
 import bgu.spl.mics.application.objects.FusionSlam;
 import bgu.spl.mics.application.objects.Pose;
+import bgu.spl.mics.application.objects.StatisticalFolder;
 import bgu.spl.mics.application.objects.TrackedObject;
 
 /**
@@ -45,7 +46,10 @@ public class FusionSlamService extends MicroService {
     protected void initialize() {
         // Subscribe to TickBroadcast, TerminatedBroadcast, and CrashedBroadcast
         subscribeBroadcast(TickBroadcast.class, (tickBroadcast) -> {
-        }); // No action needed for tick broadcasts
+            // Update the systemRuntime in the StatisticalFolder
+            StatisticalFolder stats = StatisticalFolder.getInstance();
+            stats.incrementSystemRuntime();
+        });
         subscribeBroadcast(TerminatedBroadcast.class, (terminatedBroadcast) -> {
             terminate();
             System.out.println("terminate fusion");
