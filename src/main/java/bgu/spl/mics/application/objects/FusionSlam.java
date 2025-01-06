@@ -91,7 +91,7 @@ public class FusionSlam {
     //update function
     public synchronized void update(int currTick, String id, String description, List<CloudPoint> coordinates){
         //Get the current pose
-        Pose currPose = null;
+        Pose currPose = new Pose(0,0,0,0);
         for(Pose pose : poses){
             if(pose.getTime() == currTick){
                 currPose = pose;

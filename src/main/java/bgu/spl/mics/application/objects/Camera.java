@@ -2,7 +2,6 @@ package bgu.spl.mics.application.objects;
 
 import java.util.List;
 
-import java.util.LinkedList;
 
 /**
  * Represents a camera sensor on the robot.

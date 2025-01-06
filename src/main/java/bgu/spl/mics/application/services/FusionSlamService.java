@@ -1,7 +1,6 @@
 package bgu.spl.mics.application.services;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import bgu.spl.mics.application.objects.CloudPoint;
 import bgu.spl.mics.MicroService;
@@ -11,7 +10,6 @@ import bgu.spl.mics.application.messages.TerminatedBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.messages.TrackedObjectsEvent;
 import bgu.spl.mics.application.objects.FusionSlam;
-import bgu.spl.mics.application.objects.LandMark;
 import bgu.spl.mics.application.objects.Pose;
 import bgu.spl.mics.application.objects.TrackedObject;
 
@@ -63,15 +61,6 @@ public class FusionSlamService extends MicroService {
                 List<CloudPoint> coordinates = trackedObject.getCoordinates();
                 fusionSlam.update(currentTick, id, description, coordinates);
             }
-
-
-            // Transform TrackedObjects into LandMarks
-            // List<LandMark> landMarks = event.getTrackedObjects().stream()
-            //         .map(trackedObject -> new LandMark(trackedObject.getID(), trackedObject.getDescription(),
-            //         trackedObject.getCoordinates()))
-            //         .collect(Collectors.toList());
-            // updates landmarks in the global map
-            // fusionSlam.updateMap(landMarks);
         });
 
         // Subscribe to PoseEvent

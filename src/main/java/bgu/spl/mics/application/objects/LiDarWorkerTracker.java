@@ -1,7 +1,6 @@
 package bgu.spl.mics.application.objects;
 
 import java.util.List;
-import java.util.LinkedList;
 
 /**
  * LiDarWorkerTracker is responsible for managing a LiDAR worker.

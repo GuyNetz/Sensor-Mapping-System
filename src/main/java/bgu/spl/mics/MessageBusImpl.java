@@ -43,9 +43,9 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
 		synchronized (lock) {
-			subscriptions.putIfAbsent(type, new ArrayList<>()); // יצירת רשימה אם לא קיימת
+			subscriptions.putIfAbsent(type, new ArrayList<>());
 			if (!subscriptions.get(type).contains(m)) {
-				subscriptions.get(type).add(m); // הוספת המיקרו-שירות לרשימה
+				subscriptions.get(type).add(m); 
 			}
 		}
 	}
@@ -84,7 +84,7 @@ public class MessageBusImpl implements MessageBus {
 				for (MicroService m : subscribers) {
 					Queue<Message> queue = queues.get(m);
 					if (queue != null) {
-						queue.add(b); // מוסיפים את ה-Broadcast לתור של המיקרו-שירות
+						queue.add(b); 
 					}
 				}
 				lock.notifyAll();

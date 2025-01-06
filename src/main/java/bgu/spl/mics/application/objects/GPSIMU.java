@@ -51,8 +51,7 @@ public class GPSIMU {
             }
         }
 
-        // If no matching pose is found, handle the error
-        System.err.println("Error: Pose not found for tick " + tick);
-        return null; // Or throw an exception 
+        // If no matching pose is found
+        return null;
     }
 }

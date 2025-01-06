@@ -2,7 +2,6 @@ package bgu.spl.mics.application.services;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.objects.Camera;
@@ -24,7 +23,7 @@ import bgu.spl.mics.application.objects.StatisticalFolder;
 public class CameraService extends MicroService {
     private Camera camera;
     private int cameraFrequency;
-    private int prevTick;
+    //private int prevTick;
 
     /**
      * Constructor for CameraService.
@@ -35,7 +34,7 @@ public class CameraService extends MicroService {
         super("CameraService" + camera.getID());
         this.camera = camera;
         this.cameraFrequency = camera.getFrequency();
-        prevTick = 0;
+       // prevTick = 0;
     }
 
     /**
@@ -52,27 +51,28 @@ public class CameraService extends MicroService {
             // Check if the camera is operational
             if (camera.getStatus() == STATUS.UP) {
 
-                // Check if the current tick is a multiple of the camera's frequency
-                if (tickBroadcast.getCurrentTick() % cameraFrequency == 0) {
                     // stampedObject.getTime() + cameraFrequency >= tickBroadcast.getCurrentTick()
 
                     // Send a DetectObjectsEvent to the MessageBus
                     List<StampedDetectedObjects> matchingObjects = new LinkedList<>();
+                    
                     for (StampedDetectedObjects stampedObject : camera.getDetectedObjectsList()) {
-                        if (stampedObject.getTime() == tickBroadcast.getCurrentTick()) {
+                        if (stampedObject.getTime() + cameraFrequency == tickBroadcast.getCurrentTick()) {
                             matchingObjects.add(stampedObject);
                         }
                     }
-                    if (!matchingObjects.isEmpty()) {
-                        sendEvent(new DetectObjectsEvent(tickBroadcast.getCurrentTick(), matchingObjects));
+                    if (cameraFrequency == 0 || tickBroadcast.getCurrentTick() % cameraFrequency == 0) {
+                        if (!matchingObjects.isEmpty()) {
+                            sendEvent(new DetectObjectsEvent(tickBroadcast.getCurrentTick(), matchingObjects));
 
-                        // Log the detected objects in the StatisticalFolder
-                        StatisticalFolder.getInstance().logDetectedObjects(camera.getID(),
-                                tickBroadcast.getCurrentTick(), matchingObjects);
+                            // Log the detected objects in the StatisticalFolder
+                            StatisticalFolder.getInstance().logDetectedObjects(camera.getID(),
+                                    tickBroadcast.getCurrentTick(), matchingObjects);
+                        }
                     }
                 }
 
-            }
+            //}
         });
 
         // Subscribe to TerminatedBroadcast
