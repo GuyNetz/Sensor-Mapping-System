@@ -43,4 +43,27 @@ public class Camera {
         this.status = status;
     }
 
+    public StampedDetectedObjects getNextObjectToProcess(int currentTick, int frequency) {
+    for (int i = 0; i < detectedObjectsList.size(); i++) {
+        StampedDetectedObjects stampedObject = detectedObjectsList.get(i);
+        
+        // Check if the object is ready to be processed
+        if (stampedObject.getTime() + frequency <= currentTick) {
+            
+            // Check for error condition
+            if (stampedObject.getDetectedObjects().stream()
+                    .anyMatch(detectedObject -> detectedObject.getId().equals("ERROR"))) {
+                setStatus(STATUS.ERROR); // Update camera status
+                return null; // Indicate an error occurred
+            }
+
+            // Remove and return the stamped object for processing
+            detectedObjectsList.remove(i);
+            return stampedObject;
+        }
+    }
+    return null; // No objects ready to process
+}
+
+
 }

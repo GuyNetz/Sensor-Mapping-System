@@ -44,36 +44,23 @@ public class CameraService extends MicroService {
     protected void initialize() {
         // Subscribe to TickBroadcasts
         subscribeBroadcast(TickBroadcast.class, tickBroadcast -> {
-            
-            // Check if the camera is operational
             if (camera.getStatus() == STATUS.UP) {
-
-                // stampedObject.getTime() + cameraFrequency >= tickBroadcast.getCurrentTick()
-
-                for (int i = 0; i < camera.getDetectedObjectsList().size(); i++) {
-                    // Check for error condition in each stampedObject
-                    StampedDetectedObjects stampedObject = camera.getDetectedObjectsList().get(i);
-                    if (stampedObject.getTime() + cameraFrequency <= tickBroadcast.getCurrentTick()) {
-                        // matchingObjects.add(stampedObject);
-                        if (stampedObject.getDetectedObjects().stream()
-                                .anyMatch(detectedObject -> detectedObject.getId().equals("ERROR"))) {
-                            // Error detected: Send CrashedBroadcast and terminate
-                            sendBroadcast(new CrashedBroadcast("CameraService" + camera.getID()));
-                            terminate();
-                            return; // Exit the callback after sending CrashedBroadcast
-                        } else {
-                            sendEvent(new DetectObjectsEvent(stampedObject.getTime(), stampedObject));
-                            // Log the detected objects in the StatisticalFolder
-                            StatisticalFolder.getInstance().logDetectedObjects(camera.getID(),
-                                    tickBroadcast.getCurrentTick(), stampedObject);
-                            camera.getDetectedObjectsList().remove(i);
-                            break;
-                        }
+                StampedDetectedObjects stampedObject = camera.getNextObjectToProcess(tickBroadcast.getCurrentTick(), cameraFrequency);
+        
+                if (stampedObject == null) {
+                    if (camera.getStatus() == STATUS.ERROR) {
+                        sendBroadcast(new CrashedBroadcast("CameraService" + camera.getID()));
+                        terminate();
                     }
+                } else {
+                    sendEvent(new DetectObjectsEvent(stampedObject.getTime(), stampedObject));
+        
+                    // Log the detected objects in the StatisticalFolder
+                    StatisticalFolder.getInstance().logDetectedObjects(camera.getID(), tickBroadcast.getCurrentTick(), stampedObject);
                 }
-
             }
         });
+        
 
         // Subscribe to TerminatedBroadcast
         subscribeBroadcast(TerminatedBroadcast.class, terminatedBroadcast -> {
