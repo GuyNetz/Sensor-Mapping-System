@@ -20,5 +20,9 @@ public class TrackedObjectsEvent implements Event<List<TrackedObjectsEvent>>{
     public List<TrackedObject> getTrackedObjects() {
         return trackedObjects;
     }
+
+    public int getCurrentTick() {
+        return trackedObjects.get(0).getTime();
+    }
     
 }

@@ -31,29 +31,6 @@ public class FusionSlam {
         return FusionSlamHolder.instance;
     }
 
-    public synchronized void updateMap(List<LandMark> trackedObjects) { // Update the global map with new landmarks
-        if (trackedObjects != null) {
-            for (LandMark newLandmark : trackedObjects) {
-
-                // Check if a landmark with the same ID already exists
-                LandMark existingLandmark = landMarks.stream()
-                                                   .filter(lm -> lm.getID().equals(newLandmark.getID()))
-                                                   .findFirst()
-                                                   .orElse(null);
-    
-                if (existingLandmark != null) {
-                    // Update existing landmark coordinates by averaging
-                    existingLandmark.updateCoordinates(newLandmark.getCoordinates()); 
-                } else {
-                    // Add the new landmark to the list
-                    landMarks.add(newLandmark);
-                    StatisticalFolder stats = StatisticalFolder.getInstance();
-                    stats.incrementNumLandmarks();
-                }
-            }        
-            System.out.println("FusionSlam updated with " + trackedObjects.size() + " tracked objects."); 
-        }
-    }
 
     public synchronized void updatePose(Pose pose) { // Update the global map with a new pose
         if (pose != null) {
@@ -75,5 +52,64 @@ public class FusionSlam {
             return poses.get(poses.size()-1);
 
         return new Pose(0, 0, 0, 0);
+    }
+
+    // Calculate the coordinates relative to the docking station
+    public List<CloudPoint> getRelativeCoordinates(Pose robotPose, List<CloudPoint> coordinates) {
+        List<CloudPoint> globalCoordinates = new ArrayList<>();
+        double thetaRad = Math.toRadians(robotPose.getYaw()); // convert yaw to radians
+        double cosTheta = Math.cos(thetaRad); // 2. calculate the cosine of the yaw angle
+        double sinTheta = Math.sin(thetaRad); // 2. calculate the sine of the yaw angle
+
+        for (CloudPoint localPoint : coordinates) {
+            //calculate the global coordinates
+            double xGlobal = cosTheta * localPoint.getX() - sinTheta * localPoint.getY() + robotPose.getX();
+            double yGlobal = sinTheta * localPoint.getX() + cosTheta * localPoint.getY() + robotPose.getY();
+
+            globalCoordinates.add(new CloudPoint(xGlobal, yGlobal));
+        }
+        return globalCoordinates;
+    }
+
+
+    // Check if a landmark with the given ID exists in the global map
+    private boolean doesLandMarkExist(String id) {
+        return landMarks.stream()
+                        .anyMatch(landMark -> landMark.getID().equals(id));
+    }
+
+    // Find a landmark by its ID
+    public LandMark findLandmarkById(String id) {
+        for (LandMark landMark : landMarks) {
+            if (landMark.getID().equals(id)) { // Assuming getId() is the method to retrieve the ID
+                return landMark;
+            }
+        }
+        return null; // Return null if no matching LandMark is found(cant happen)
+    }
+
+    //update function
+    public synchronized void update(int currTick, String id, String description, List<CloudPoint> coordinates){
+        //Get the current pose
+        Pose currPose = null;
+        for(Pose pose : poses){
+            if(pose.getTime() == currTick){
+                currPose = pose;
+            }
+        }
+
+        //Get the coordinates relative to the docking station
+        List<CloudPoint> relativeCoordinates = getRelativeCoordinates(currPose, coordinates);
+
+        //Check if the current object alraedy exists in map
+        LandMark existingLandmark = findLandmarkById(id);
+        if(doesLandMarkExist(id)){
+            //Update the coordinates by averaging   
+            existingLandmark.averageCoordinates(relativeCoordinates);
+        }else{
+            //add the new object to the map
+            landMarks.add(new LandMark(id, description, relativeCoordinates));
+        }
+
     }
 }

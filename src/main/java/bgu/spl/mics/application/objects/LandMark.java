@@ -34,7 +34,8 @@ public class LandMark {
         return coordinates;
     }
 
-    public synchronized void updateCoordinates(List<CloudPoint> newCoordinates) { // Calculate the average coordinates for existing LandMark
+    // Update the coordinates of the LandMark by averaging the new coordinates
+    public void averageCoordinates(List<CloudPoint> newCoordinates) {
         if (newCoordinates != null && coordinates != null && newCoordinates.size() == coordinates.size()) {
             List<CloudPoint> averagedCoordinates = new ArrayList<>();
 
@@ -48,4 +49,5 @@ public class LandMark {
             numScans++; // Increment the number of scans 
         }
     }
+
 }

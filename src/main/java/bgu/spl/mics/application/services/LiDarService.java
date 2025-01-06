@@ -16,30 +16,31 @@ import bgu.spl.mics.application.messages.TrackedObjectsEvent;
 import bgu.spl.mics.application.objects.StatisticalFolder;
 import bgu.spl.mics.application.objects.TrackedObject;
 
-
-
 /**
  * LiDarService is responsible for processing data from the LiDAR sensor and
  * sending TrackedObjectsEvents to the FusionSLAM service.
  * 
- * This service interacts with the LiDarWorkerTracker object to retrieve and process
+ * This service interacts with the LiDarWorkerTracker object to retrieve and
+ * process
  * cloud point data and updates the system's StatisticalFolder upon sending its
  * observations.
  */
 public class LiDarService extends MicroService {
     private LiDarWorkerTracker LiDarWorkerTracker;
     private int LiDarWorkerTrackerFreq;
-    
+    private int curTick;
 
     /**
      * Constructor for LiDarService.
      *
-     * @param LiDarWorkerTracker A LiDAR Tracker worker object that this service will use to process data.
+     * @param LiDarWorkerTracker A LiDAR Tracker worker object that this service
+     *                           will use to process data.
      */
     public LiDarService(LiDarWorkerTracker LiDarWorkerTracker) {
         super("LidarService" + LiDarWorkerTracker.getID());
         this.LiDarWorkerTracker = LiDarWorkerTracker;
         this.LiDarWorkerTrackerFreq = LiDarWorkerTracker.getFrequency();
+        curTick = 0;
     }
 
     /**
@@ -51,35 +52,41 @@ public class LiDarService extends MicroService {
     protected void initialize() {
         // Subscribe to TickBroadcast
         subscribeBroadcast(TickBroadcast.class, tickBroadcast -> {
-
+            curTick = tickBroadcast.getCurrentTick();
             // Check if the LiDAR worker is operational
-            if (LiDarWorkerTracker.getStatus() == STATUS.UP) {
-
-                // Check if the current tick is a multiple of the LiDAR worker's frequency
-                if (tickBroadcast.getCurrentTick() % LiDarWorkerTrackerFreq == 0 && (LiDarWorkerTracker.getTrackedObjectsList().size() != 0)) {
-
-                    // Process the data and send a TrackedObjectsEvent to the MessageBus
-                    List<TrackedObject> matchingObjects = new LinkedList<>();
-                    for (TrackedObject trackedObject : LiDarWorkerTracker.getTrackedObjectsList()) {
-                        if (trackedObject.getTime() == tickBroadcast.getCurrentTick()) {
-                            matchingObjects.add(trackedObject);
-                        }
-                    }
-                    if(!matchingObjects.isEmpty()){
-                        sendEvent(new TrackedObjectsEvent(matchingObjects));
-
-                        // Log the tracked objects in the StatisticalFolder
-                        StatisticalFolder.getInstance().logTrackedObjects(LiDarWorkerTracker.getID(), tickBroadcast.getCurrentTick(), matchingObjects);
-                    }
-                }
-            }
+            /*
+             * if (LiDarWorkerTracker.getStatus() == STATUS.UP) {
+             * 
+             * // Check if the current tick is a multiple of the LiDAR worker's frequency
+             * if (tickBroadcast.getCurrentTick() % LiDarWorkerTrackerFreq == 0
+             * && (LiDarWorkerTracker.getTrackedObjectsList().size() != 0)) {
+             * 
+             * // Process the data and send a TrackedObjectsEvent to the MessageBus
+             * List<TrackedObject> matchingObjects = new LinkedList<>();
+             * for (TrackedObject trackedObject :
+             * LiDarWorkerTracker.getTrackedObjectsList()) {
+             * if (trackedObject.getTime() == tickBroadcast.getCurrentTick()) {
+             * matchingObjects.add(trackedObject);
+             * }
+             * }
+             * if (!matchingObjects.isEmpty()) {
+             * sendEvent(new TrackedObjectsEvent(matchingObjects));
+             * 
+             * // Log the tracked objects in the StatisticalFolder
+             * StatisticalFolder.getInstance().logTrackedObjects(LiDarWorkerTracker.getID(),
+             * tickBroadcast.getCurrentTick(), matchingObjects);
+             * }
+             * }
+             * }
+             */
         });
-    
+
         // Subscribe to TerminatedBroadcast
         subscribeBroadcast(TerminatedBroadcast.class, terminatedBroadcast -> {
+            System.out.println("terminate camera");
             terminate();
         });
-    
+
         // Subscribe to CrashedBroadcast
         subscribeBroadcast(CrashedBroadcast.class, crashedBroadcast -> {
             LiDarWorkerTracker.setStatus(STATUS.DOWN);
@@ -87,15 +94,31 @@ public class LiDarService extends MicroService {
 
         // Subscribe to DetectObjectsEvent
         subscribeEvent(DetectObjectsEvent.class, detectObjectsEvent -> {
-           
+
             // Check if the LiDAR worker is operational
-            if (LiDarWorkerTracker.getStatus() == STATUS.UP && (LiDarWorkerTracker.getTrackedObjectsList().size() != 0)) {
+            if (LiDarWorkerTracker.getStatus() == STATUS.UP
+                    && (LiDarWorkerTracker.getTrackedObjectsList().size() != 0)) {
 
                 // Process the data and send a TrackedObjectsEvent to the MessageBus
-                sendEvent(new TrackedObjectsEvent(LiDarWorkerTracker.getTrackedObjectsList()));
+                // sendEvent(new
+                // TrackedObjectsEvent(LiDarWorkerTracker.getTrackedObjectsList()));
+                // Check if the current tick is a multiple of the LiDAR worker's frequency
+                if (curTick % LiDarWorkerTrackerFreq == 0 && (LiDarWorkerTracker.getTrackedObjectsList().size() != 0)) {
 
-                // Log the tracked objects in the StatisticalFolder
-                StatisticalFolder.getInstance().logTrackedObjects(LiDarWorkerTracker.getID(), detectObjectsEvent.getDetectionTime(), LiDarWorkerTracker.getTrackedObjectsList());
+                    // Process the data and send a TrackedObjectsEvent to the MessageBus
+                    List<TrackedObject> matchingObjects = new LinkedList<>();
+                    for (TrackedObject trackedObject : LiDarWorkerTracker.getTrackedObjectsList()) {
+                        if (trackedObject.getTime() == curTick) {
+                            matchingObjects.add(trackedObject);
+                        }
+                    }
+                    if (!matchingObjects.isEmpty()) {
+                        sendEvent(new TrackedObjectsEvent(matchingObjects));
+                    }
+                    // Log the tracked objects in the StatisticalFolder
+                    StatisticalFolder.getInstance().logTrackedObjects(LiDarWorkerTracker.getID(),
+                            detectObjectsEvent.getDetectionTime(), matchingObjects);
+                }
             }
         });
     }
