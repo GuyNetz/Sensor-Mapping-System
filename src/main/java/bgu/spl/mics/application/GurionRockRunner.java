@@ -44,7 +44,7 @@ public class GurionRockRunner {
         // return;
         // }
 
-        String configFilePath = "example input\\configuration_file.json";
+        String configFilePath = "example input/configuration_file.json";
 
         try {
             System.out.println("Parsing configuration file...");

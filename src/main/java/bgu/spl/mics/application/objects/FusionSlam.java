@@ -109,6 +109,7 @@ public class FusionSlam {
         }else{
             //add the new object to the map
             landMarks.add(new LandMark(id, description, relativeCoordinates));
+            StatisticalFolder.getInstance().incrementNumLandmarks();
         }
 
     }
