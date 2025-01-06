@@ -39,7 +39,7 @@ public class TimeService extends MicroService {
                     // Update the systemRuntime in the StatisticalFolder
                     StatisticalFolder stats = StatisticalFolder.getInstance();
                     stats.incrementSystemRuntime();
-
+                    
                     // Broadcast the current tick
                     sendBroadcast(new TickBroadcast(currentTick));
                     System.out.println("Tick " + currentTick + " broadcasted");

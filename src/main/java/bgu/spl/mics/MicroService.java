@@ -155,7 +155,9 @@ public abstract class MicroService implements Runnable {
      * The entry point of the micro-service. TODO: you must complete this code
      * otherwise you will end up in an infinite loop.
      */
+
     @Override
+    @SuppressWarnings("unchecked")
     public final void run() {
         MessageBusImpl messageBus = MessageBusImpl.getInstance(); // Get the message bus instance
         messageBus.register(this); // Register the MicroService
