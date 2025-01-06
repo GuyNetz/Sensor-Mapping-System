@@ -113,7 +113,7 @@ public class GurionRockRunner {
             /***********************************
              * Initialize LiDarServices
              ***********************************/
-            JsonObject lidars = config.getAsJsonObject("LidarWorkers");
+            JsonObject lidars = config.getAsJsonObject("LiDarWorkers");
             JsonArray lidarsConfigurations = lidars.getAsJsonArray("LidarConfigurations");
             // NEED TO CHANGE THE WAY WE GET THE LIDAR DATA TO BE FROM THE CONFIGURATION
             // FILE//
