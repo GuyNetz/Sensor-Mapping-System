@@ -36,6 +36,7 @@ public class GurionRockRunner {
      *             path to the configuration file.
      */
     public static void main(String[] args) {
+        System.out.println(args[0]);
         Map<String, String> idToDescription = new HashMap<>();
         System.out.println("Starting the GurionRock Pro Max Ultra Over 9000 simulation...");
 
@@ -43,8 +44,8 @@ public class GurionRockRunner {
         // System.err.println("Usage: java GurionRockRunner <configuration file path>");
         // return;
         // }
-
-        String configFilePath = "example input/configuration_file.json";
+        String relativePath = args[0].substring(0, args[0].lastIndexOf("/"));
+        String configFilePath = args[0];
 
         try {
             System.out.println("Parsing configuration file...");
@@ -67,7 +68,8 @@ public class GurionRockRunner {
             JsonArray camerasConfigurations = cameras.getAsJsonArray("CamerasConfigurations");
             // String camerasJsonPath = cameras.get("camera_datas_path").getAsString();
             // JsonObject camerasData = parseJsonConfig(camerasJsonPath);
-            JsonObject camerasData = parseJsonConfig("example input/camera_data.json"); // Try to change that
+            String camDataPath = relativePath + cameras.get("camera_datas_path").getAsString().substring(1);
+            JsonObject camerasData = parseJsonConfig(camDataPath); // Try to change that
 
             // loop over all cameras
             CameraService[] cameraServices = new CameraService[camerasConfigurations.size()];
@@ -119,7 +121,8 @@ public class GurionRockRunner {
             // FILE//
             // JsonObject lidarsData = parseJsonConfig("/workspaces/spl assignment 2/example
             // input/lidar_data.json"); // Try to change that
-            LiDarDataBase lidarDataBase = LiDarDataBase.getInstance("example input/lidar_data.json");
+            String liDarDataPath = relativePath + lidars.get("lidars_data_path").getAsString().substring(1);
+            LiDarDataBase lidarDataBase = LiDarDataBase.getInstance(liDarDataPath);
 
             // loop over all lidars
             LiDarService[] lidarServices = new LiDarService[lidarsConfigurations.size()];
@@ -153,7 +156,8 @@ public class GurionRockRunner {
             /***********************************
              * Initialize PoseService
              ***********************************/
-            JsonArray poseData = parseJsonArrayConfig("example input/pose_data.json"); // Try to change that
+            String poseDataPath = relativePath + config.get("poseJsonFile").getAsString().substring(1);
+            JsonArray poseData = parseJsonArrayConfig(poseDataPath); // Try to change that
             List<Pose> poseList = new LinkedList<>();
 
             // loop over all poses

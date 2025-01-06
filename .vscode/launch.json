@@ -9,14 +9,14 @@
             "name": "GurionRockRunner",
             "request": "launch",
             "mainClass": "bgu.spl.mics.application.GurionRockRunner",
-            "projectName": "spl224ass2"
+            "projectName": "spl225ass2"
         },
         {
             "type": "java",
             "name": "Current File",
             "request": "launch",
             "mainClass": "${file}",
-            "args": "\"example input\\configuration_file.json\""
+            "args": "\"example_input_2/configuration_file.json\""
         },
         {
             "type": "java",

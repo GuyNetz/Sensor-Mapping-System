@@ -1,6 +1,7 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.CrashedBroadcast;
 import bgu.spl.mics.application.messages.TerminatedBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.objects.StatisticalFolder;
@@ -33,13 +34,14 @@ public class TimeService extends MicroService {
      */
     @Override
     protected void initialize() {
+
         Thread timerThread = new Thread(() -> {
             for (int currentTick = 1; currentTick <= Duration; currentTick++) {
                 try {
                     // Update the systemRuntime in the StatisticalFolder
-                    StatisticalFolder stats = StatisticalFolder.getInstance();
-                    stats.incrementSystemRuntime();
-                    
+                    // StatisticalFolder stats = StatisticalFolder.getInstance();
+                    // stats.incrementSystemRuntime();
+
                     // Broadcast the current tick
                     sendBroadcast(new TickBroadcast(currentTick));
                     System.out.println("Tick " + currentTick + " broadcasted");
@@ -64,12 +66,20 @@ public class TimeService extends MicroService {
         });
 
         // Start the timer thread
+        subscribeBroadcast(TerminatedBroadcast.class, term -> {
+            timerThread.interrupt();
+            terminate();
+        });
+        subscribeBroadcast(CrashedBroadcast.class, crashed -> {
+            timerThread.interrupt();
+            terminate();
+        });
         timerThread.start();
-        try {
-            timerThread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        System.out.println("TimeService terminated");
+        // try {
+        // timerThread.join();
+        // } catch (InterruptedException e) {
+        // e.printStackTrace();
+        // }
+        // System.out.println("TimeService terminated");
     }
 }
