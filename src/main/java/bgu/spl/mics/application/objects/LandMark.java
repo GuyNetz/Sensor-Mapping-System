@@ -1,5 +1,4 @@
 package bgu.spl.mics.application.objects;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -11,14 +10,12 @@ public class LandMark {
     private String id;
     private String description;
     private List<CloudPoint> coordinates;
-    private int numScans = 0; // Number of scans used to calculate the current coordinates
 
     // Constructor
     public LandMark(String id, String description, List<CloudPoint> coordinates) {
         this.id = id;
         this.description = description;
         this.coordinates = coordinates;
-        this.numScans = 1;
     }
 
     // Methods
@@ -36,17 +33,23 @@ public class LandMark {
 
     // Update the coordinates of the LandMark by averaging the new coordinates
     public void averageCoordinates(List<CloudPoint> newCoordinates) {
-        if (newCoordinates != null && coordinates != null && newCoordinates.size() == coordinates.size()) {
-            List<CloudPoint> averagedCoordinates = new ArrayList<>();
-
-            for (int i = 0; i < coordinates.size(); i++) {
-                double averagedX = (coordinates.get(i).getX() * numScans + newCoordinates.get(i).getX()) / (numScans + 1);
-                double averagedY = (coordinates.get(i).getY() * numScans + newCoordinates.get(i).getY()) / (numScans + 1);
-                averagedCoordinates.add(new CloudPoint(averagedX, averagedY));
+        if (newCoordinates != null && coordinates != null) {
+            // Find the shorter length between the existing and new coordinates
+            int minLength = Math.min(coordinates.size(), newCoordinates.size());
+    
+            // Update the existing coordinates with the average for the overlapping points
+            for (int i = 0; i < minLength; i++) {
+                double averagedX = 0.5 * (coordinates.get(i).getX() + newCoordinates.get(i).getX());
+                double averagedY = 0.5 * (coordinates.get(i).getY() + newCoordinates.get(i).getY());
+                coordinates.set(i, new CloudPoint(averagedX, averagedY));
             }
-
-            coordinates = averagedCoordinates;
-            numScans++; // Increment the number of scans 
+    
+            // Add any remaining points from the new coordinates list to the existing list
+            if (newCoordinates.size() > coordinates.size()) {
+                for (int i = coordinates.size(); i < newCoordinates.size(); i++) {
+                    coordinates.add(newCoordinates.get(i));
+                }
+            }
         }
     }
 

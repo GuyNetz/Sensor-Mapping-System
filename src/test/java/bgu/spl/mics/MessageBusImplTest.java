@@ -2,9 +2,7 @@ package bgu.spl.mics;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 
-import bgu.spl.mics.application.objects.Camera;
 import bgu.spl.mics.application.objects.GPSIMU;
-import bgu.spl.mics.application.services.CameraService;
 import bgu.spl.mics.application.services.PoseService;
 import bgu.spl.mics.application.objects.Pose;
 import bgu.spl.mics.application.messages.PoseEvent;
@@ -14,37 +12,6 @@ import bgu.spl.mics.application.services.TimeService;
 
 
 class MessageBusImplTest {
-
-    /************** testing register **************/
-    // @Test
-    // void testRegister() {
-    //     //objects
-    //     MessageBusImpl bus = MessageBusImpl.getInstance();
-    //     Camera camera = new Camera(1, 3);
-    //     MicroService cameraService = new CameraService(camera);
-
-    //     //register
-    //     bus.register(cameraService);
-
-    //     //check if the service is in the queue
-    //     assertTrue(bus.getQueues().containsKey(cameraService));
-    // }
-
-    /************** testing unregister **************/
-    // @Test
-    // void testUnregister() {
-    //     //objects
-    //     MessageBusImpl bus = MessageBusImpl.getInstance();
-    //     Camera camera = new Camera(1, 3);
-    //     MicroService cameraService = new CameraService(camera);
-
-    //     //register and unregister
-    //     bus.register(cameraService);
-    //     bus.unregister(cameraService);
-
-    //     //check if the service is in the queue
-    //     assertFalse(bus.getQueues().containsKey(cameraService));
-    // }
 
     /************** testing subscribeEvent **************/
     @Test
@@ -139,7 +106,7 @@ class MessageBusImplTest {
         senderThread.join();
     }
 
-    /************** testing awaitMessage **************/
+    /************** testing sendEvent **************/
     //Ensures sendEvent returns null when no MicroService is subscribed to the event type.
     @Test
     void testSendEventNoSubscribers() {
