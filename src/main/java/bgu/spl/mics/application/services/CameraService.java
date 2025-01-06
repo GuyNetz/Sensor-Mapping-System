@@ -14,8 +14,6 @@ import bgu.spl.mics.application.objects.STATUS;
 import bgu.spl.mics.application.objects.StampedDetectedObjects;
 import bgu.spl.mics.application.objects.StatisticalFolder;
 
-
-
 /**
  * CameraService is responsible for processing data from the camera and
  * sending DetectObjectsEvents to LiDAR workers.
@@ -26,6 +24,7 @@ import bgu.spl.mics.application.objects.StatisticalFolder;
 public class CameraService extends MicroService {
     private Camera camera;
     private int cameraFrequency;
+    private int prevTick;
 
     /**
      * Constructor for CameraService.
@@ -36,11 +35,13 @@ public class CameraService extends MicroService {
         super("CameraService" + camera.getID());
         this.camera = camera;
         this.cameraFrequency = camera.getFrequency();
+        prevTick = 0;
     }
 
     /**
      * Initializes the CameraService.
-     * Registers the service to handle TickBroadcasts and sets up callbacks for sending
+     * Registers the service to handle TickBroadcasts and sets up callbacks for
+     * sending
      * DetectObjectsEvents.
      */
     @Override
@@ -53,6 +54,7 @@ public class CameraService extends MicroService {
 
                 // Check if the current tick is a multiple of the camera's frequency
                 if (tickBroadcast.getCurrentTick() % cameraFrequency == 0) {
+                    // stampedObject.getTime() + cameraFrequency >= tickBroadcast.getCurrentTick()
 
                     // Send a DetectObjectsEvent to the MessageBus
                     List<StampedDetectedObjects> matchingObjects = new LinkedList<>();
@@ -61,28 +63,29 @@ public class CameraService extends MicroService {
                             matchingObjects.add(stampedObject);
                         }
                     }
-                    if(!matchingObjects.isEmpty()){
-                        sendEvent(new DetectObjectsEvent(tickBroadcast.getCurrentTick() , matchingObjects));
+                    if (!matchingObjects.isEmpty()) {
+                        sendEvent(new DetectObjectsEvent(tickBroadcast.getCurrentTick(), matchingObjects));
 
                         // Log the detected objects in the StatisticalFolder
-                        StatisticalFolder.getInstance().logDetectedObjects(camera.getID(), tickBroadcast.getCurrentTick(), matchingObjects);
+                        StatisticalFolder.getInstance().logDetectedObjects(camera.getID(),
+                                tickBroadcast.getCurrentTick(), matchingObjects);
                     }
                 }
 
-                    
             }
         });
 
         // Subscribe to TerminatedBroadcast
         subscribeBroadcast(TerminatedBroadcast.class, terminatedBroadcast -> {
+            System.out.println("terminate camera");
             terminate();
         });
-    
+
         // Subscribe to CrashedBroadcast
         subscribeBroadcast(CrashedBroadcast.class, crashedBroadcast -> {
             camera.setStatus(STATUS.DOWN);
         });
-    
+
     }
 
     public void stopService() {
