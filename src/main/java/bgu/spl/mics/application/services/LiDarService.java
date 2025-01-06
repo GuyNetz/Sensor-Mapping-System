@@ -76,11 +76,28 @@ public class LiDarService extends MicroService {
 
                     // Process the data and send a TrackedObjectsEvent to the MessageBus
                     List<TrackedObject> matchingObjects = new LinkedList<>();
+                    boolean error = false;
+
                     for (TrackedObject trackedObject : LiDarWorkerTracker.getTrackedObjectsList()) {
                         if (trackedObject.getTime() == curTick) {
+
+                            //Check if error
+                            if ("ERROR".equals(trackedObject.getID())){
+                                error = true;
+                                break;
+                            }
                             matchingObjects.add(trackedObject);
                         }
                     }
+
+                    // If an error is detected, broadcast a CrashedBroadcast and set the sensor as DOWN
+                    if (error) {
+                        System.out.println("LiDAR sensor error detected at tick " + curTick + ". Broadcasting CrashedBroadcast.");
+                        sendBroadcast(new CrashedBroadcast("LiDar Service" + LiDarWorkerTracker.getID()));
+                        LiDarWorkerTracker.setStatus(STATUS.DOWN);
+                        return; // Stop further processing
+                    }
+                    
                     if (!matchingObjects.isEmpty()) {
                         sendEvent(new TrackedObjectsEvent(matchingObjects));
                     }

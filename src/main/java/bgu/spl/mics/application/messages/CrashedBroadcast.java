@@ -3,13 +3,14 @@ package bgu.spl.mics.application.messages;
 import bgu.spl.mics.Broadcast;
 
 public class CrashedBroadcast implements Broadcast{
+    private String faultySensor; // Faulty sensor ID or name
+   
+    public CrashedBroadcast(String faultySensor) {
+        this.faultySensor = faultySensor;
+    }
 
-        /**
-     * Constructor for CrashedBroadcast.
-     * This class does not require any fields since it serves only as a signal.
-     */
-    public CrashedBroadcast() {
-        // No fields required; this is a simple signal message.
+    public String getFaultySensor(){ // Getter
+        return faultySensor;
     }
 }
     

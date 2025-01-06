@@ -57,6 +57,14 @@ public class CameraService extends MicroService {
                     List<StampedDetectedObjects> matchingObjects = new LinkedList<>();
                     
                     for (StampedDetectedObjects stampedObject : camera.getDetectedObjectsList()) {
+                        // Check for error condition in each stampedObject
+                if (stampedObject.getDetectedObjects().stream()
+                        .anyMatch(detectedObject -> detectedObject.getId().equals("ERROR"))) {
+                    // Error detected: Send CrashedBroadcast and terminate
+                    sendBroadcast(new CrashedBroadcast("CameraService" + camera.getID())); 
+                    terminate();
+                    return; // Exit the callback after sending CrashedBroadcast
+                }
                         if (stampedObject.getTime() + cameraFrequency == tickBroadcast.getCurrentTick()) {
                             matchingObjects.add(stampedObject);
                         }
