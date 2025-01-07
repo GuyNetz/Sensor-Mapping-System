@@ -39,7 +39,7 @@ public class GurionRockRunner {
         System.out.println(args[0]);
         Map<String, String> idToDescription = new HashMap<>();
         System.out.println("Starting the GurionRock Pro Max Ultra Over 9000 simulation...");
-
+        
         if (args.length != 1) {
         System.err.println("Usage: java GurionRockRunner <configuration file path>");
         return;
