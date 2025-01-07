@@ -40,10 +40,11 @@ public class GurionRockRunner {
         Map<String, String> idToDescription = new HashMap<>();
         System.out.println("Starting the GurionRock Pro Max Ultra Over 9000 simulation...");
 
-        // if (args.length != 1) {
-        // System.err.println("Usage: java GurionRockRunner <configuration file path>");
-        // return;
-        // }
+        if (args.length != 1) {
+        System.err.println("Usage: java GurionRockRunner <configuration file path>");
+        return;
+        }
+
         String relativePath = args[0].substring(0, args[0].lastIndexOf("/"));
         String configFilePath = args[0];
 
@@ -66,8 +67,6 @@ public class GurionRockRunner {
             // Getting the relevant JSON objects
             JsonObject cameras = config.getAsJsonObject("Cameras");
             JsonArray camerasConfigurations = cameras.getAsJsonArray("CamerasConfigurations");
-            // String camerasJsonPath = cameras.get("camera_datas_path").getAsString();
-            // JsonObject camerasData = parseJsonConfig(camerasJsonPath);
             String camDataPath = relativePath + cameras.get("camera_datas_path").getAsString().substring(1);
             JsonObject camerasData = parseJsonConfig(camDataPath); // Try to change that
 
@@ -117,10 +116,6 @@ public class GurionRockRunner {
              ***********************************/
             JsonObject lidars = config.getAsJsonObject("LiDarWorkers");
             JsonArray lidarsConfigurations = lidars.getAsJsonArray("LidarConfigurations");
-            // NEED TO CHANGE THE WAY WE GET THE LIDAR DATA TO BE FROM THE CONFIGURATION
-            // FILE//
-            // JsonObject lidarsData = parseJsonConfig("/workspaces/spl assignment 2/example
-            // input/lidar_data.json"); // Try to change that
             String liDarDataPath = relativePath + lidars.get("lidars_data_path").getAsString().substring(1);
             LiDarDataBase lidarDataBase = LiDarDataBase.getInstance(liDarDataPath);
 
@@ -136,8 +131,7 @@ public class GurionRockRunner {
                 // creating a list of tracked objects for the lidar
                 List<TrackedObject> trackedObjectsList = new ArrayList<>();
 
-                // going over the lidarDataBase and adding the tracked objects to the
-                // trackedObjectsList
+                // going over the lidarDataBase and adding the tracked objects to the trackedObjectsList
                 List<StampedCloudPoints> stampedCloudPoints = lidarDataBase.getCloudPoints();
                 for (StampedCloudPoints point : stampedCloudPoints) {
                     List<CloudPoint> cloudPointList = new ArrayList<>();
@@ -219,16 +213,51 @@ public class GurionRockRunner {
                     faultySensor = "LiDar " + faultyLiDar.getID();
                 }        
             }
+
+            //getting the poses until the error
+            List<Pose> poses = new LinkedList<>();
+            if(error != null){
+                for(int i = 0; i < stats.getSystemRuntime(); i++){
+                    poses.add(poseList.get(i)); 
+                }
+            }
+
+            //getting the last camera frames
+            Map<String, LastFrameData> lastCameraFrames = new HashMap<>();
+            for(CameraService cameraService : cameraServices){
+                List<DetectedObject> detectedObjects = new ArrayList<>();
+                StampedDetectedObjects lastFrame = cameraService.getLastFrame();
+                if(lastFrame != null){
+                    for(DetectedObject detectedObject : lastFrame.getDetectedObjects()){
+                        detectedObjects.add(detectedObject);
+                    }
+                    lastCameraFrames.put("Camera " + cameraService.getCamera().getID(), new LastFrameData(lastFrame.getTime(), detectedObjects));
+                }
+            }
+
+            // Getting the last lidar frames
+            Map<String, List<TrackedObject>> lastLidarFrames = new HashMap<>();
+            for (LiDarService lidarService : lidarServices) {
+                List<TrackedObject> trackedObjects = new ArrayList<>(lidarService.getLiDarWorkerTracker().getTrackedObjectsList());
+                lastLidarFrames.put("LiDar " + lidarService.getLiDarWorkerTracker().getID(), trackedObjects);
+            }
+
             
             OutputData outputData = new OutputData(stats, landMarks);
-            ErrorOutputData errorOutputData = new ErrorOutputData(error, faultySensor,);
+            ErrorOutputData errorOutputData = new ErrorOutputData(error, faultySensor,lastCameraFrames ,lastLidarFrames, poses, outputData);
 
             
-
-            try (FileWriter writer = new FileWriter("output.json")) {
+            if(error == null){
+                try (FileWriter writer = new FileWriter("output_file.json")) {
                 gson.toJson(outputData, writer);
             }
-            System.out.println("Output file created: output.json");
+            System.out.println("Output file created: output_file.json");
+            }else{
+                try (FileWriter writer = new FileWriter("OutputError.json")) {
+                gson.toJson(errorOutputData, writer);
+                }
+                System.out.println("Output file created: OutputError.json");
+            }
 
         } catch (IOException e) {
             System.err.println("Error reading configuration file: " + e.getMessage());
@@ -329,18 +358,29 @@ class OutputData {
 class ErrorOutputData {
     private final String error;
     private final String faultySensor;
-    private final List<Camera> lastCameraFrames;
-    private final List<LiDarWorkerTracker> lastLidarFrames;
+    private final Map<String, LastFrameData> lastCamerasFrames;
+    private final Map<String, List<TrackedObject>> lastLiDarWorkerTrackersFrames;
     private final List<Pose> poses;
     private final OutputData statistics;
    
 
-    public ErrorOutputData(String error, String faultySensor, List<Camera> lastCameraFrames, List<LiDarWorkerTracker> lastLidarFrames, List<Pose> poses, OutputData statistics) {
+    public ErrorOutputData(String error, String faultySensor, Map<String, LastFrameData> lastCameraFrames, Map<String, List<TrackedObject>> lastLidarFrames, List<Pose> poses, OutputData statistics) {
         this.error = error;
         this.faultySensor = faultySensor;
-        this.lastCameraFrames = lastCameraFrames;
-        this.lastLidarFrames = lastLidarFrames;
+        this.lastCamerasFrames = lastCameraFrames;
+        this.lastLiDarWorkerTrackersFrames = lastLidarFrames;
         this.poses = poses;
         this.statistics = statistics;
+    }
+}
+
+@SuppressWarnings("unused")
+class LastFrameData {
+    private final int time;
+    private final List<DetectedObject> detectedObjects;
+
+    public LastFrameData(int time, List<DetectedObject> detectedObjects) {
+        this.time = time;
+        this.detectedObjects = detectedObjects;
     }
 }

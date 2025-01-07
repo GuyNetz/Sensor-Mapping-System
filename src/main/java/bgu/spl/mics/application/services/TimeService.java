@@ -37,10 +37,6 @@ public class TimeService extends MicroService {
         Thread timerThread = new Thread(() -> {
             for (int currentTick = 1; currentTick <= Duration; currentTick++) {
                 try {
-                    // Update the systemRuntime in the StatisticalFolder
-                    // StatisticalFolder stats = StatisticalFolder.getInstance();
-                    // stats.incrementSystemRuntime();
-
                     // Broadcast the current tick
                     sendBroadcast(new TickBroadcast(currentTick));
 
@@ -73,11 +69,5 @@ public class TimeService extends MicroService {
             terminate();
         });
         timerThread.start();
-        // try {
-        // timerThread.join();
-        // } catch (InterruptedException e) {
-        // e.printStackTrace();
-        // }
-        // System.out.println("TimeService terminated");
     }
 }

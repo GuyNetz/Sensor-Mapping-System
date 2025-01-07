@@ -39,15 +39,12 @@ public class PoseService extends MicroService {
             int currentTime = tickBroadcast.getCurrentTick();
             Pose currentPose = gpsimu.getPose(currentTime);
 
-
-            //************************************
             if (currentPose == null) {
                 System.out.println("Pose not found at tick " + currentTime + ". Broadcasting TerminatedBroadcast.");
                 sendBroadcast(new TerminatedBroadcast());
                 terminate();
                 return;
             }
-            //************************************
 
             // Send a PoseEvent with the current pose and time
             PoseEvent poseEvent = new PoseEvent(currentPose);

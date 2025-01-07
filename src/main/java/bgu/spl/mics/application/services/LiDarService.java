@@ -28,6 +28,8 @@ public class LiDarService extends MicroService {
     private LiDarWorkerTracker LiDarWorkerTracker;
     private int LiDarWorkerTrackerFreq;
     private int curTick;
+    private List<TrackedObject> lastFrame;
+    
     
 
     /**
@@ -40,7 +42,9 @@ public class LiDarService extends MicroService {
         super("LidarService" + LiDarWorkerTracker.getID());
         this.LiDarWorkerTracker = LiDarWorkerTracker;
         this.LiDarWorkerTrackerFreq = LiDarWorkerTracker.getFrequency();
-        curTick = 0;
+        this.curTick = 0;
+        this.lastFrame = null;
+
     }
 
     /**
@@ -102,6 +106,7 @@ public class LiDarService extends MicroService {
             // If there are valid matching objects, send an event and log them
             if (!matchingObjects.isEmpty()) {
                 sendEvent(new TrackedObjectsEvent(matchingObjects));
+                lastFrame = new LinkedList<>(matchingObjects);
                 StatisticalFolder.getInstance().logTrackedObjects(LiDarWorkerTracker.getID(),
                         detectObjectsEvent.getDetectionTime(), matchingObjects);
             }
@@ -118,5 +123,15 @@ public class LiDarService extends MicroService {
     }
     public LiDarWorkerTracker getLiDarWorkerTracker() {
         return LiDarWorkerTracker;
+    }
+
+    //getter for lastFrame
+    public List<TrackedObject> getLastFrame() {
+        return lastFrame;
+    }    
+
+    //getter for curTick
+    public int getCurTick() {
+        return curTick;
     }
 }

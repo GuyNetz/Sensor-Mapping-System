@@ -1,5 +1,6 @@
 package bgu.spl.mics.application.services;
 
+
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.objects.Camera;
 import bgu.spl.mics.application.messages.CrashedBroadcast;
@@ -20,6 +21,8 @@ import bgu.spl.mics.application.objects.StatisticalFolder;
 public class CameraService extends MicroService {
     private Camera camera;
     private int cameraFrequency;
+    private StampedDetectedObjects lastFrame;
+
     // private int prevTick;
 
     /**
@@ -31,6 +34,7 @@ public class CameraService extends MicroService {
         super("CameraService" + camera.getID());
         this.camera = camera;
         this.cameraFrequency = camera.getFrequency();
+        this.lastFrame = null;
         // prevTick = 0;
     }
 
@@ -54,7 +58,7 @@ public class CameraService extends MicroService {
                     }
                 } else {
                     sendEvent(new DetectObjectsEvent(stampedObject.getTime(), stampedObject));
-        
+                    this.lastFrame = stampedObject;
                     // Log the detected objects in the StatisticalFolder
                     StatisticalFolder.getInstance().logDetectedObjects(camera.getID(), tickBroadcast.getCurrentTick(), stampedObject);
                 }
@@ -82,5 +86,9 @@ public class CameraService extends MicroService {
 
     public Camera getCamera() {
         return camera;
+    }
+
+    public StampedDetectedObjects getLastFrame() {
+        return lastFrame;
     }
 }
